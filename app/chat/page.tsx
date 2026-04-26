@@ -20,82 +20,99 @@ const DOCS_LIST = [
 type Msg = {
   id: string; role: 'user' | 'assistant';
   text: string; bullets?: string[]; tags?: string[]; source?: string;
+  refCode?: string; // stable reference code stored per message
 };
 
-function uid() { return Math.random().toString(36).slice(2); }
-function ref() { return `EC/QRY/${Math.floor(10000 + Math.random() * 90000)}`; }
+let counter = 0;
+function uid() { return `msg-${++counter}-${Date.now()}`; }
+function genRef() { return `EC/QRY/${Math.floor(10000 + Math.random() * 90000)}`; }
 
-function answer(q: string): Omit<Msg, 'id' | 'role'> {
-  const l = q.toLowerCase();
-  if (l.includes('eligible') || l.includes('qualify'))
+async function getGeminiResponse(messages: Msg[]): Promise<Omit<Msg, 'id' | 'role' | 'refCode'>> {
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages }),
+    });
+    const data = await response.json();
+    if (!response.ok || data.error) {
+      throw new Error(data.error || `Server error ${response.status}`);
+    }
     return {
-      text: 'Based on the Representation of the People Act, 1950, you are eligible to vote if you meet all of the following conditions:',
-      bullets: ['Must be a citizen of India.','Must be 18 years of age or older on the qualifying date (typically 1st January).','Must be ordinarily resident of the polling area.','Must be enrolled in the electoral roll of that constituency.'],
-      tags: ['AGE: 18+', 'CITIZENSHIP REQUIRED', 'RESIDENCY REQUIRED'],
-      source: 'Representation of the People Act, 1950 — Sec. 19',
+      text: data.text,
+      bullets: data.bullets,
+      source: 'Election Commission of India',
     };
-  if (l.includes('document') || l.includes('carry') || l.includes('id'))
+  } catch (error: any) {
+    console.error("Chat Error:", error);
     return {
-      text: 'Carry at least one of the following valid identity documents to the polling booth:',
-      bullets: ['EPIC Card (Voter ID)', 'Aadhaar Card', 'Passport', 'Driving License', 'PAN Card (with photo)', 'Bank Passbook with photo'],
-      source: 'ECI Guidelines — General Elections 2024',
+      text: error.message || "I apologize, but I am currently unable to process your request. Please try again later or visit voters.eci.gov.in.",
+      source: "System Error",
     };
-  if (l.includes('booth') || l.includes('polling station') || l.includes('find'))
-    return {
-      text: 'To locate your designated polling booth:',
-      bullets: ['Visit voters.eci.gov.in', 'Select "Know Your Polling Station"', 'Enter your EPIC number or personal details', 'Your booth address and officer details will be shown'],
-      tags: ['NVSP.IN', 'HELPLINE: 1950'],
-      source: 'National Voter Service Portal — ECI',
-    };
-  if (l.includes('register') || l.includes('enroll'))
-    return {
-      text: 'To register as a new voter, submit Form 6 (New Voter Registration):',
-      bullets: ['Online: voters.eci.gov.in or Voter Helpline app', 'Fill Form 6: name, date of birth, address', 'Upload age proof, address proof, and photograph', 'Submit and track using your reference number'],
-      tags: ['FORM 6', 'ERO OFFICE'],
-      source: 'ECI Voter Registration Guidelines',
-    };
-  return {
-    text: 'I can help you with voter eligibility, required documents, polling booth location, and voter registration. Please ask a specific question or use the suggestions above.',
-    source: 'VoteSetu Civic Assistant — ECI Data 2024',
-  };
+  }
 }
 
 const B: React.CSSProperties = {
   fontFamily: 'var(--font-body)', fontSize: '0.88rem', lineHeight: 1.75, color: '#374151',
 };
 
+const WELCOME_MSG: Msg = {
+  id: 'welcome-0',
+  role: 'assistant',
+  text: 'Welcome. I am the VoteSetu Civic Assistant — a service of the Election Commission of India. Ask any question about voter eligibility, registration, required documents, or the election process.',
+  source: 'Election Commission of India — Civic Assistant',
+  refCode: 'EC/QRY/00001',
+};
+
 function ChatContent() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q');
 
-  const [msgs, setMsgs] = useState<Msg[]>([{
-    id: '0', role: 'assistant',
-    text: 'Welcome. I am the VoteSetu Civic Assistant — a service of the Election Commission of India. Ask any question about voter eligibility, registration, required documents, or the election process.',
-    source: 'Election Commission of India — Civic Assistant',
-  }]);
+  const [msgs, setMsgs] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const sentInitial = useRef(false);
 
   useEffect(() => {
-    if (initialQ && msgs.length === 1) send(initialQ);
+    if (initialQ && !sentInitial.current) {
+      sentInitial.current = true;
+      send(initialQ);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [msgs, typing]);
 
-  function send(text: string) {
+  async function send(text: string) {
     if (!text.trim() || typing) return;
     const uMsg: Msg = { id: uid(), role: 'user', text };
-    setMsgs(p => [...p, uMsg]);
+    const newMsgs = [...msgs, uMsg];
+    setMsgs(newMsgs);
     setInput('');
     setTyping(true);
-    setTimeout(() => {
-      const ans = answer(text);
-      setMsgs(p => [...p, { id: uid(), role: 'assistant', ...ans }]);
+
+    try {
+      const ans = await getGeminiResponse(newMsgs);
+      setMsgs(prev => [...prev, {
+        id: uid(),
+        role: 'assistant',
+        refCode: genRef(),
+        ...ans,
+      }]);
+    } catch {
+      setMsgs(prev => [...prev, {
+        id: uid(),
+        role: 'assistant',
+        refCode: genRef(),
+        text: 'An unexpected error occurred. Please try again.',
+        source: 'System Error',
+      }]);
+    } finally {
       setTyping(false);
-    }, 600 + Math.random() * 600);
+    }
   }
 
   return (
@@ -185,9 +202,20 @@ function ChatContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', paddingBottom: '0.6rem', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--navy)' }}>Response</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', fontWeight: 600, color: 'var(--green)', letterSpacing: '0.1em' }}>● Verified</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', color: 'var(--muted)', marginLeft: 'auto' }}>{ref()}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', color: 'var(--muted)', marginLeft: 'auto' }}>{m.refCode}</span>
               </div>
-              <p style={{ ...B, marginBottom: m.bullets ? '0.65rem' : 0 }}>{m.text}</p>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {m.text.split("\n").map((line, index) => {
+                  const trimmed = line.trim();
+                  if (trimmed.startsWith("- ")) {
+                    return <li key={index} style={{ ...B, position: 'relative', paddingLeft: '1.1rem' }}>
+                      <span style={{ position: 'absolute', left: 0 }}>•</span>
+                      {trimmed.replace("- ", "")}
+                    </li>;
+                  }
+                  return <p key={index} style={{ ...B, marginBottom: '0.4rem' }}>{line}</p>;
+                })}
+              </ul>
               {m.bullets && (
                 <ul style={{ paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.65rem' }}>
                   {m.bullets.map(b => <li key={b} style={B}>{b}</li>)}

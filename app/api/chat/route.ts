@@ -1,0 +1,171 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextRequest, NextResponse } from "next/server";
+import { CIVIC_KNOWLEDGE } from "@/lib/docs";
+
+const SYSTEM_PROMPT = `
+You are the VoteSetu Civic Assistant, an official service of the Election Commission of India.
+Your goal is to provide accurate, concise, and helpful information about elections in India.
+
+Official Knowledge Base:
+\${CIVIC_KNOWLEDGE}
+
+CRITICAL INTELLIGENCE & FOLLOW-UP RULES:
+1. If the user asks for a specific number or data point (like "Just give me the age"):
+   -> Return ONLY the direct answer in the "text" field.
+   -> Do NOT repeat the previous explanation.
+   -> Leave "bullets" empty.
+2. If exact real-time data is unavailable, provide a reasonable estimate (e.g., "Approximately 96-98 crore").
+
+CRITICAL FORMATTING RULES:
+1. You MUST respond with a JSON object containing EXACTLY two keys: "text" and "bullets".
+2. "text": A concise explanation (1-2 lines). PLAIN TEXT ONLY. No markdown (**bold**, *italics*, etc.).
+3. "bullets": An array of strings for lists, steps, or requirements. Each string is a single item. NO MARKDOWN. NO BULLET SYMBOLS (- or *) in the strings.
+4. If there is NO list, return an empty array [] for "bullets".
+5. ALWAYS extract multiple requirements or steps into the "bullets" array instead of paragraph text.
+
+Example JSON output for a list:
+{
+  "text": "You are eligible to vote if you meet these criteria:",
+  "bullets": [
+    "Must be a citizen of India",
+    "Must be 18 years of age or older",
+    "Must be enrolled in the electoral roll"
+  ]
+}
+
+Example JSON output for a direct follow-up:
+{
+  "text": "18 years.",
+  "bullets": []
+}
+
+Tone: Professional, authoritative, yet helpful.
+`;
+
+// Models to try in order of preference — if one hits quota, the next is tried
+const MODELS_TO_TRY = [
+  "gemini-2.0-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash",
+];
+
+export async function POST(req: NextRequest) {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY is missing from environment variables.");
+      return NextResponse.json(
+        { error: "API key not configured. Add GEMINI_API_KEY to .env.local and restart the server." },
+        { status: 500 }
+      );
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const { messages } = await req.json();
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "No messages provided." }, { status: 400 });
+    }
+
+    const lastMessage = messages[messages.length - 1].text;
+    const query = lastMessage.toLowerCase();
+
+    // HYBRID SYSTEM: Intercept specific queries to guarantee perfect structure
+    if (query.includes("documents")) {
+      return NextResponse.json({
+        text: "The following documents are accepted for voter registration and identification at the polling booth:",
+        bullets: [
+          "Aadhaar Card",
+          "Passport",
+          "Driving License",
+          "PAN Card",
+          "MNREGA Job Card",
+          "Passbooks with photograph issued by Bank/Post Office",
+          "Health Insurance Smart Card issued under the scheme of Ministry of Labour",
+          "Pension document with photograph",
+          "Official identity cards issued to MPs/MLAs/MLCs",
+          "Unique Disability ID (UDID) Card"
+        ]
+      });
+    }
+
+    // Build history: skip the first welcome message (synthetic, not from the model)
+    // and skip the last message (sent via sendMessage).
+    const rawHistory = messages.slice(1, -1);
+    const history: { role: "user" | "model"; parts: { text: string }[] }[] = [];
+
+    for (const m of rawHistory) {
+      const role = m.role === "user" ? "user" : "model";
+      if (history.length > 0 && history[history.length - 1].role === role) {
+        history[history.length - 1].parts[0].text += "\n" + m.text;
+      } else {
+        history.push({ role, parts: [{ text: m.text }] });
+      }
+    }
+
+    if (history.length > 0 && history[0].role !== "user") {
+      history.shift();
+    }
+
+    let lastError: any = null;
+    for (const modelName of MODELS_TO_TRY) {
+      try {
+        console.log(`Trying model: ${modelName}`);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_PROMPT,
+          generationConfig: {
+            responseMimeType: "application/json",
+          }
+        });
+
+        const chat = model.startChat({ history });
+        const result = await chat.sendMessage(lastMessage);
+        const rawText = result.response.text();
+        
+        let parsed;
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (e) {
+          console.error("Failed to parse JSON response:", rawText);
+          // Fallback if model ignored JSON directive
+          parsed = { text: rawText.replace(/\*\*/g, ""), bullets: [] };
+        }
+
+        console.log(`Success with model: ${modelName}`);
+        return NextResponse.json({ 
+          text: parsed.text || "Information retrieved.", 
+          bullets: Array.isArray(parsed.bullets) && parsed.bullets.length > 0 ? parsed.bullets : undefined 
+        });
+      } catch (err: any) {
+        lastError = err;
+        const msg = err?.message || "";
+        if (
+          msg.includes("quota") ||
+          msg.includes("429") ||
+          msg.includes("RESOURCE_EXHAUSTED") ||
+          msg.includes("404") ||
+          msg.includes("not found") ||
+          msg.includes("Not Found")
+        ) {
+          console.warn(`Error with ${modelName}: ${msg.slice(0, 120)}. Trying next model...`);
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    throw lastError;
+  } catch (error: any) {
+    console.error("Gemini API Error:", error?.message || error);
+    const errMsg = error?.message || "";
+    const message = errMsg.includes("API_KEY_INVALID")
+      ? "Invalid API key. Please check your GEMINI_API_KEY in .env.local."
+      : errMsg.includes("quota") || errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED")
+      ? "API quota exceeded on all available models. Please wait a minute and try again."
+      : errMsg || "Failed to get response from Gemini.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
