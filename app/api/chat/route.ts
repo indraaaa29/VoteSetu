@@ -1,13 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { CIVIC_KNOWLEDGE } from "@/lib/docs";
+import { interceptIntent } from "@/lib/intent-interceptor";
 
 const SYSTEM_PROMPT = `
 You are the VoteSetu Civic Assistant, an official service of the Election Commission of India.
 Your goal is to provide accurate, concise, and helpful information about elections in India.
 
 Official Knowledge Base:
-\${CIVIC_KNOWLEDGE}
+${CIVIC_KNOWLEDGE}
 
 CRITICAL INTELLIGENCE & FOLLOW-UP RULES:
 1. If the user asks for a specific number or data point (like "Just give me the age"):
@@ -62,33 +63,23 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const { messages } = await req.json();
+    const { messages, language } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     }
 
-    const lastMessage = messages[messages.length - 1].text;
-    const query = lastMessage.toLowerCase();
+    const langInstruction = language === 'hi' ? "हिंदी में उत्तर दें। सरल और स्पष्ट भाषा का उपयोग करें।" : "Respond in English. Use simple, clear language.";
+    const finalSystemPrompt = SYSTEM_PROMPT + `\n\nLANGUAGE INSTRUCTION: ${langInstruction}`;
 
-    // HYBRID SYSTEM: Intercept specific queries to guarantee perfect structure
-    if (query.includes("documents")) {
-      return NextResponse.json({
-        text: "The following documents are accepted for voter registration and identification at the polling booth:",
-        bullets: [
-          "Aadhaar Card",
-          "Passport",
-          "Driving License",
-          "PAN Card",
-          "MNREGA Job Card",
-          "Passbooks with photograph issued by Bank/Post Office",
-          "Health Insurance Smart Card issued under the scheme of Ministry of Labour",
-          "Pension document with photograph",
-          "Official identity cards issued to MPs/MLAs/MLCs",
-          "Unique Disability ID (UDID) Card"
-        ]
-      });
+    const lastMessage = messages[messages.length - 1].text;
+    
+    // HYBRID SYSTEM: Intent Interceptor
+    const intercepted = interceptIntent(lastMessage, language);
+    if (intercepted) {
+      return NextResponse.json(intercepted);
     }
+
 
     // Build history: skip the first welcome message (synthetic, not from the model)
     // and skip the last message (sent via sendMessage).
@@ -114,7 +105,7 @@ export async function POST(req: NextRequest) {
         console.log(`Trying model: ${modelName}`);
         const model = genAI.getGenerativeModel({
           model: modelName,
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: finalSystemPrompt,
           generationConfig: {
             responseMimeType: "application/json",
           }
@@ -136,7 +127,8 @@ export async function POST(req: NextRequest) {
         console.log(`Success with model: ${modelName}`);
         return NextResponse.json({ 
           text: parsed.text || "Information retrieved.", 
-          bullets: Array.isArray(parsed.bullets) && parsed.bullets.length > 0 ? parsed.bullets : undefined 
+          bullets: Array.isArray(parsed.bullets) && parsed.bullets.length > 0 ? parsed.bullets : undefined,
+          source: language === 'hi' ? "भारत निर्वाचन आयोग" : "Election Commission of India"
         });
       } catch (err: any) {
         lastError = err;

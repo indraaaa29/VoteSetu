@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useLanguage } from '../LanguageContext';
 
 const SUGGESTIONS = [
   'Am I eligible to vote?',
@@ -27,12 +28,16 @@ let counter = 0;
 function uid() { return `msg-${++counter}-${Date.now()}`; }
 function genRef() { return `EC/QRY/${Math.floor(10000 + Math.random() * 90000)}`; }
 
-async function getGeminiResponse(messages: Msg[]): Promise<Omit<Msg, 'id' | 'role' | 'refCode'>> {
+async function getGeminiResponse(messages: Msg[], currentLang: string): Promise<Omit<Msg, 'id' | 'role' | 'refCode'>> {
   try {
+    const lastMessage = messages[messages.length - 1].text;
+    const isHindi = /[\u0900-\u097F]/.test(lastMessage);
+    const targetLang = isHindi ? 'hi' : 'en';
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, language: targetLang }),
     });
     const data = await response.json();
     if (!response.ok || data.error) {
@@ -41,7 +46,7 @@ async function getGeminiResponse(messages: Msg[]): Promise<Omit<Msg, 'id' | 'rol
     return {
       text: data.text,
       bullets: data.bullets,
-      source: 'Election Commission of India',
+      source: data.source || 'Election Commission of India',
     };
   } catch (error: any) {
     console.error("Chat Error:", error);
@@ -67,6 +72,7 @@ const WELCOME_MSG: Msg = {
 function ChatContent() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q');
+  const { lang, t } = useLanguage();
 
   const [msgs, setMsgs] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
@@ -95,7 +101,7 @@ function ChatContent() {
     setTyping(true);
 
     try {
-      const ans = await getGeminiResponse(newMsgs);
+      const ans = await getGeminiResponse(newMsgs, lang);
       setMsgs(prev => [...prev, {
         id: uid(),
         role: 'assistant',
@@ -103,13 +109,24 @@ function ChatContent() {
         ...ans,
       }]);
     } catch {
-      setMsgs(prev => [...prev, {
-        id: uid(),
-        role: 'assistant',
-        refCode: genRef(),
-        text: 'An unexpected error occurred. Please try again.',
-        source: 'System Error',
-      }]);
+      // Retry once automatically
+      try {
+        const ans = await getGeminiResponse(newMsgs, lang);
+        setMsgs(prev => [...prev, {
+          id: uid(),
+          role: 'assistant',
+          refCode: genRef(),
+          ...ans,
+        }]);
+      } catch (e: any) {
+        setMsgs(prev => [...prev, {
+          id: uid(),
+          role: 'assistant',
+          refCode: genRef(),
+          text: lang === 'hi' ? 'एक अप्रत्याशित त्रुटि हुई। कृपया पुन: प्रयास करें।' : 'An unexpected error occurred. Please try again.',
+          source: 'System Error',
+        }]);
+      }
     } finally {
       setTyping(false);
     }
@@ -155,14 +172,14 @@ function ChatContent() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
             <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--navy)' }}>
-              Civic Assistant
+              {t("Civic Assistant")}
             </span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--green)' }}>
               ● OPERATIONAL
             </span>
           </div>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--muted)' }}>
-            Querying Official Electoral Roll Data
+            {t("Querying Official Electoral Roll Data")}
           </p>
         </div>
 
@@ -189,7 +206,7 @@ function ChatContent() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {msgs.map(m => m.role === 'user' ? (
             <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.35rem' }}>You</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.35rem' }}>{t("You")}</span>
               <div style={{ backgroundColor: '#F3F4F6', padding: '0.65rem 1rem', maxWidth: '55%' }}>
                 <p style={B}>{m.text}</p>
               </div>
@@ -200,12 +217,12 @@ function ChatContent() {
               padding: '1rem 1.25rem',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', paddingBottom: '0.6rem', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--navy)' }}>Response</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--navy)' }}>{t("Response")}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', fontWeight: 600, color: 'var(--green)', letterSpacing: '0.1em' }}>● Verified</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', color: 'var(--muted)', marginLeft: 'auto' }}>{m.refCode}</span>
               </div>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {m.text.split("\n").map((line, index) => {
+                {(m.id === 'welcome-0' ? t(m.text) : m.text).split("\n").map((line, index) => {
                   const trimmed = line.trim();
                   if (trimmed.startsWith("- ")) {
                     return <li key={index} style={{ ...B, position: 'relative', paddingLeft: '1.1rem' }}>
@@ -230,7 +247,7 @@ function ChatContent() {
               )}
               {m.source && (
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.52rem', color: 'var(--green)', letterSpacing: '0.08em', paddingTop: '0.6rem', borderTop: '1px solid var(--border)' }}>
-                  ✓ Source: {m.source}
+                  ✓ Source: {t(m.source)}
                 </p>
               )}
             </div>
@@ -253,7 +270,7 @@ function ChatContent() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && send(input)}
-            placeholder="Ask about elections, eligibility, or documents..."
+            placeholder={t("Ask about elections, eligibility, or documents...")}
             style={{
               flex: 1, border: '1px solid var(--border)', padding: '0.6rem 1rem',
               fontFamily: 'var(--font-body)', fontSize: '0.88rem', outline: 'none',
@@ -263,6 +280,34 @@ function ChatContent() {
             onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
             onBlur={e => (e.target.style.borderColor = 'var(--border)')}
           />
+          <button
+            onClick={() => {
+              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+                recognition.onresult = (event: any) => {
+                  const transcript = event.results[0][0].transcript;
+                  setInput(transcript);
+                  send(transcript);
+                };
+                recognition.onerror = (event: any) => {
+                  alert(lang === 'hi' ? "आवाज़ पहचानी नहीं गई, कृपया पुनः प्रयास करें" : "Voice not recognized, please try again");
+                }
+                recognition.start();
+              } else {
+                alert("Voice input not supported in this browser.");
+              }
+            }}
+            style={{
+              background: 'white', border: '1px solid var(--border)', borderLeft: 'none',
+              padding: '0 0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center',
+              cursor: 'pointer'
+            }}
+            title="Voice Input"
+          >
+            <span style={{ fontSize: '1.2rem' }}>🎙️</span>
+          </button>
           <button onClick={() => send(input)} style={{
             fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700,
             letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -273,7 +318,7 @@ function ChatContent() {
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
-            Ask
+            {t("Ask")}
           </button>
         </div>
       </div>

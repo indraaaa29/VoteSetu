@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '../LanguageContext';
 
 const DOCS = [
   { id: 'voting-process', label: 'Voting Process', cat: 'PROCESS' },
@@ -99,6 +100,7 @@ function Section({ s, idx }: { s: typeof CONTENT[string]['sections'][0]; idx: nu
 }
 
 export default function DocumentsPage() {
+  const { t } = useLanguage();
   const [activeId, setActiveId] = useState('eligibility');
   const doc = CONTENT[activeId];
 
@@ -116,7 +118,7 @@ export default function DocumentsPage() {
           fontFamily: 'var(--font-mono)', fontSize: '0.52rem', letterSpacing: '0.16em',
           textTransform: 'uppercase', color: 'var(--muted)', padding: '0 1.25rem', marginBottom: '0.5rem',
         }}>
-          Documents
+          {t("Documents")}
         </p>
         {DOCS.map(d => (
           <button key={d.id} onClick={() => setActiveId(d.id)} style={{
@@ -130,12 +132,12 @@ export default function DocumentsPage() {
               fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em',
               textTransform: 'uppercase', color: activeId === d.id ? 'var(--saffron)' : 'var(--muted)',
               display: 'block', marginBottom: 2,
-            }}>{d.cat}</span>
+            }}>{t(d.cat)}</span>
             <span style={{
               fontFamily: 'var(--font-body)', fontSize: '0.8rem', lineHeight: 1.4,
               color: activeId === d.id ? 'var(--navy)' : '#6B7280',
               fontWeight: activeId === d.id ? 600 : 400,
-            }}>{d.label}</span>
+            }}>{t(d.label)}</span>
           </button>
         ))}
       </aside>
@@ -148,7 +150,7 @@ export default function DocumentsPage() {
           fontFamily: 'var(--font-mono)', fontSize: '0.52rem', letterSpacing: '0.12em',
           textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '1.5rem',
         }}>
-          Documents › {DOCS.find(d => d.id === activeId)?.cat} › {DOCS.find(d => d.id === activeId)?.label}
+          {t("Documents")} › {t(DOCS.find(d => d.id === activeId)?.cat || '')} › {t(DOCS.find(d => d.id === activeId)?.label || '')}
         </p>
 
         {/* Title */}
@@ -168,19 +170,19 @@ export default function DocumentsPage() {
             fontFamily: 'var(--font-mono)', fontSize: '0.58rem', fontWeight: 600,
             letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--green)',
           }}>
-            ✓ Verified
+            ✓ {t("Verified")}
           </span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.56rem', color: 'var(--muted)', letterSpacing: '0.08em' }}>
             Election Commission of India
           </span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.56rem', color: 'var(--muted)' }}>
-            Updated {doc.updated}
+            {t("Updated ")}{doc.updated}
           </span>
           <Link href={`/chat?q=${encodeURIComponent('Tell me about: ' + doc.title)}`} style={{
             fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--saffron)',
             fontWeight: 600, marginLeft: 'auto',
           }}>
-            Ask about this →
+            {t("Ask about this →")}
           </Link>
         </div>
 

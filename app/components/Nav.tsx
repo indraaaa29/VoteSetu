@@ -1,15 +1,19 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '../LanguageContext';
 
 const LINKS = [
   { href: '/',           label: 'Home' },
   { href: '/documents',  label: 'Documents' },
+  { href: '/checklist',  label: 'Checklist' },
   { href: '/chat',       label: 'Chat' },
 ];
 
 export default function Nav() {
   const path = usePathname();
+  const { lang, setLang, t } = useLanguage();
+
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, height: 'var(--nav-h)',
@@ -35,10 +39,23 @@ export default function Nav() {
               borderBottom: `2px solid ${active ? 'var(--saffron)' : 'transparent'}`,
               transition: 'color 0.15s, border-color 0.15s',
             }}>
-              {label}
+              {t(label)}
             </Link>
           );
         })}
+        <button
+          onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600,
+            color: 'var(--navy)', marginLeft: '1rem', display: 'flex', alignItems: 'center',
+            gap: '0.3rem'
+          }}
+        >
+          <span style={{ opacity: lang === 'en' ? 1 : 0.5 }}>EN</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span style={{ opacity: lang === 'hi' ? 1 : 0.5, fontSize: '0.85rem' }}>हिंदी</span>
+        </button>
       </div>
     </nav>
   );

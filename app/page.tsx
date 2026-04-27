@@ -1,4 +1,7 @@
+'use client';
 import Link from 'next/link';
+import ConstituencySearch from './components/ConstituencySearch';
+import { useLanguage } from './LanguageContext';
 
 const STATS = [
   { value: '96.8 Cr',   label: 'Registered Voters' },
@@ -8,11 +11,13 @@ const STATS = [
 
 const ACTIONS = [
   { href: '/documents', arrow: '→', title: 'Understand the Voting Process', desc: 'Step-by-step election guide' },
-  { href: '/documents', arrow: '→', title: 'Check Your Eligibility',         desc: 'Who can vote and how' },
+  { href: '/checklist', arrow: '→', title: 'Smart Document Checklist',      desc: 'Track your registration readiness' },
   { href: '/chat',      arrow: '→', title: 'Ask the Assistant',              desc: 'Get verified answers instantly' },
 ];
 
 export default function HomePage() {
+  const { t } = useLanguage();
+
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '72px 2rem 6rem' }}>
 
@@ -21,7 +26,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.16em',
         textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '2.5rem',
       }}>
-        Election Commission of India · Civic Information System
+        {t("Election Commission of India · Civic Information System")}
       </p>
 
       {/* Headline */}
@@ -30,7 +35,7 @@ export default function HomePage() {
         fontWeight: 700, color: 'var(--navy)', lineHeight: 1.1,
         letterSpacing: '-0.02em', marginBottom: '1.25rem',
       }}>
-        India&apos;s Elections, Explained.
+        {t("India's Elections, Explained.")}
       </h1>
 
       {/* Body */}
@@ -38,8 +43,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-body)', fontSize: '1rem', lineHeight: 1.75,
         color: 'var(--muted)', maxWidth: 520, marginBottom: '3rem',
       }}>
-        VoteSetu is a structured information system for Indian voters. Understand the election process,
-        verify your eligibility, and ask questions — all from verified official sources.
+        {t("VoteSetu is a structured information system for Indian voters. Understand the election process, verify your eligibility, and ask questions — all from verified official sources.")}
       </p>
 
       {/* Divider */}
@@ -62,11 +66,14 @@ export default function HomePage() {
               fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.12em',
               textTransform: 'uppercase', color: 'var(--muted)',
             }}>
-              {s.label}
+              {t(s.label)}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Personalization Section */}
+      <ConstituencySearch />
 
       {/* Divider */}
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 0 0' }} />
@@ -85,10 +92,10 @@ export default function HomePage() {
             {a.arrow}
           </span>
           <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--navy)' }}>
-            {a.title}
+            {t(a.title)}
           </span>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-            {a.desc}
+            {t(a.desc)}
           </span>
         </Link>
       ))}
@@ -98,7 +105,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.1em',
         textTransform: 'uppercase', color: 'var(--muted)', marginTop: '3rem',
       }}>
-        Source: eci.gov.in · Data: April 2024
+        {t("Source: eci.gov.in · Data: April 2024")}
       </p>
     </main>
   );
