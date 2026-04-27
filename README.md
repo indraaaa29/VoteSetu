@@ -60,7 +60,7 @@ npm install
 ### 3. Configure environment variables
 Create a `.env.local` file in the root directory:
 ```env
-GEMINI_API_KEY=your_google_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 ```
 
 ### 4. Run the development server

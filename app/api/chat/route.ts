@@ -53,11 +53,11 @@ const MODELS_TO_TRY = [
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      console.error("GEMINI_API_KEY is missing from environment variables.");
+      console.error("GOOGLE_API_KEY is missing from environment variables.");
       return NextResponse.json(
-        { error: "API key not configured. Add GEMINI_API_KEY to .env.local and restart the server." },
+        { error: "API key not configured. Add GOOGLE_API_KEY to .env.local and restart the server." },
         { status: 500 }
       );
     }
