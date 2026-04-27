@@ -1,13 +1,13 @@
 'use client';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '../../lib/LanguageContext';
 
 const SUGGESTIONS = [
-  'Am I eligible to vote?',
-  'What documents do I need?',
-  'How do I find my polling booth?',
-  'How do I register to vote?',
+  'chat.suggestion_eligibility',
+  'chat.suggestion_docs',
+  'chat.suggestion_booth',
+  'chat.suggestion_register',
 ];
 
 const DOCS_LIST = [
@@ -44,10 +44,9 @@ async function getGeminiResponse(messages: Msg[], language: string): Promise<Omi
       bullets: data.bullets,
       source: data.source || 'Election Commission of India',
     };
-  } catch (error: any) {
-    console.error("Chat Error:", error);
+  } catch (error: unknown) {
     return {
-      text: error.message || "I apologize, but I am currently unable to process your request. Please try again later or visit voters.eci.gov.in.",
+      text: error instanceof Error ? error.message : "I apologize, but I am currently unable to process your request. Please try again later or visit voters.eci.gov.in.",
       source: "System Error",
     };
   }
@@ -124,7 +123,7 @@ function ChatContent() {
           refCode: genRef(),
           ...ans,
         }]);
-      } catch (e: any) {
+      } catch {
         setMsgs(prev => [...prev, {
           id: uid(),
           role: 'assistant',
@@ -187,15 +186,15 @@ function ChatContent() {
           background: 'var(--bg)', flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-            <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--navy)' }}>
-              {t("Civic Assistant")}
+            <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--navy)', marginRight: 'auto' }}>
+              {t("chat.title")}
             </span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', letterSpacing: '0.1em', color: 'var(--green)' }}>
               ● OPERATIONAL
             </span>
           </div>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--muted)' }}>
-            {t("Querying Official Electoral Roll Data")}
+            {t("chat.subtitle")}
           </p>
         </div>
 
@@ -205,7 +204,7 @@ function ChatContent() {
           display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flexShrink: 0, background: 'var(--bg)',
         }}>
           {SUGGESTIONS.map(s => (
-            <button key={s} onClick={() => send(s)} style={{
+            <button key={s} onClick={() => send(t(s))} style={{
               fontFamily: 'var(--font-body)', fontSize: '0.72rem', border: '1px solid var(--border)',
               background: '#fff', color: 'var(--navy)', padding: '0.3rem 0.75rem',
               cursor: 'pointer', transition: 'border-color 0.1s',
@@ -222,7 +221,7 @@ function ChatContent() {
         <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {msgs.map(m => m.role === 'user' ? (
             <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.35rem' }}>{t("You")}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.35rem' }}>{t("chat.you")}</span>
               <div style={{ backgroundColor: '#F3F4F6', padding: '0.65rem 1rem', maxWidth: '55%' }}>
                 <p style={B}>{m.text}</p>
               </div>
@@ -233,12 +232,12 @@ function ChatContent() {
               padding: '1rem 1.25rem',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', paddingBottom: '0.6rem', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--navy)' }}>{t("Response")}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', fontWeight: 600, color: 'var(--green)', letterSpacing: '0.1em' }}>● Verified</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--navy)' }}>{t("chat.response")}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', fontWeight: 600, color: 'var(--green)', letterSpacing: '0.1em' }}>● {t("chat.verified")}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', color: 'var(--muted)', marginLeft: 'auto' }}>{m.refCode}</span>
               </div>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {(m.id === 'welcome-0' ? t(m.text) : m.text).split("\n").map((line, index) => {
+                {(m.id === 'welcome-0' ? t("chat.welcome") : m.text).split("\n").map((line: string, index: number) => {
                   const trimmed = line.trim();
                   if (trimmed.startsWith("- ")) {
                     return <li key={index} style={{ ...B, position: 'relative', paddingLeft: '1.1rem' }}>
@@ -341,7 +340,9 @@ function ChatContent() {
                   if (currentText) setInput(currentText);
 
                   if (final) {
-                    send(final);
+                    setTimeout(() => {
+                      send(final);
+                    }, 300);
                     recognition.stop();
                   }
                 };
@@ -376,17 +377,21 @@ function ChatContent() {
               transition: 'transform 0.3s ease'
             }}>🎙️</span>
           </button>
-          <button onClick={() => send(input)} style={{
-            fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            background: 'var(--saffron)', color: 'var(--navy)',
-            border: 'none', height: '42px', padding: '0 1.5rem', cursor: 'pointer',
-            borderRadius: '8px', transition: 'all 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          <button 
+            onClick={() => send(input)} 
+            disabled={typing}
+            style={{
+              fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700,
+              background: 'var(--saffron)', color: '#fff', border: 'none',
+              padding: '0 1.25rem', height: '42px', borderRadius: '8px',
+              cursor: typing ? 'not-allowed' : 'pointer', transition: 'all 0.2s',
+              opacity: typing ? 0.6 : 1,
+              letterSpacing: '0.05em'
+            }}
+            onMouseEnter={e => !typing && (e.currentTarget.style.opacity = '0.9')}
+            onMouseLeave={e => !typing && (e.currentTarget.style.opacity = '1')}
           >
-            {t("Ask")}
+            {typing ? t("...") : t("ASK")}
           </button>
         </div>
       </div>

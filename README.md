@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VoteSetu — Civic Information Assistant
 
-## Getting Started
+## Project Description
+A document-first civic assistant that helps users understand the Indian election process through structured documents and an intelligent chatbot interface.
 
-First, run the development server:
+## Features
+* Document-based information system
+* AI-powered chatbot for voter queries
+* Real-time voice-to-text interaction
+* Language support (English + Hindi)
+* Structured and verified responses
+* Clean, minimal, government-style UI
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Tech Stack
+* Next.js (App Router)
+* React.js
+* TypeScript
+* Google Gemini API
+* Web Speech API (voice input)
+* Custom context-based i18n system
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
+* `/app`: Next.js App Router pages and API routes (e.g. `/app/chat`, `/app/documents`, `/app/api`).
+* `/components`: Reusable React components (UI elements like `Nav`, `ConstituencySearch`, `DocumentChecklist`).
+* `/lib`: Core business logic, configuration, utilities, and React context providers (e.g. `LanguageContext`).
+* `/styles`: Global stylesheets and CSS modules.
+* `/public`: Static assets.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup Instructions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone the repo**
+   ```bash
+   git clone <your-repo-url>
+   cd "VoteSetu"
+   ```
 
-## Learn More
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Environment Setup**
+   Create a `.env.local` file in the root directory:
+   ```env
+   GOOGLE_API_KEY=your_api_key
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Run locally**
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
+* **Recommended**: Vercel
+* Add your `GOOGLE_API_KEY` to the environment variables in your Vercel dashboard.
 
-## Deploy on Vercel
+## Screenshots / Demo
+*(Add placeholders for UI screenshots: Home, Chat, Documents)*
+* [Home Screen Screenshot Placeholder]
+* [Chat Interface Screenshot Placeholder]
+* [Documents View Screenshot Placeholder]
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Future Improvements
+* Better AI reasoning layer
+* Real-time civic data integration
+* Advanced personalization

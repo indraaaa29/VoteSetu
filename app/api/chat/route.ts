@@ -99,10 +99,9 @@ export async function POST(req: NextRequest) {
       history.shift();
     }
 
-    let lastError: any = null;
+    let lastError: unknown = null;
     for (const modelName of MODELS_TO_TRY) {
       try {
-        console.log(`Trying model: ${modelName}`);
         const model = genAI.getGenerativeModel({
           model: modelName,
           systemInstruction: finalSystemPrompt,
@@ -119,29 +118,25 @@ export async function POST(req: NextRequest) {
         try {
           parsed = JSON.parse(rawText);
         } catch (e) {
-          console.error("Failed to parse JSON response:", rawText);
           // Fallback if model ignored JSON directive
           parsed = { text: rawText.replace(/\*\*/g, ""), bullets: [] };
         }
 
-        console.log(`Success with model: ${modelName}`);
         return NextResponse.json({ 
-          text: parsed.text || "Information retrieved.", 
+          text: parsed.text || (language === 'hi' ? "सूचना प्राप्त की गई।" : "Information retrieved."), 
           bullets: Array.isArray(parsed.bullets) && parsed.bullets.length > 0 ? parsed.bullets : undefined,
           source: language === 'hi' ? "भारत निर्वाचन आयोग" : "Election Commission of India"
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         lastError = err;
-        const msg = err?.message || "";
+        const msg = err instanceof Error ? err.message : "";
         if (
           msg.includes("quota") ||
           msg.includes("429") ||
           msg.includes("RESOURCE_EXHAUSTED") ||
           msg.includes("404") ||
-          msg.includes("not found") ||
-          msg.includes("Not Found")
+          msg.includes("not found")
         ) {
-          console.warn(`Error with ${modelName}: ${msg.slice(0, 120)}. Trying next model...`);
           continue;
         }
         throw err;
@@ -149,14 +144,13 @@ export async function POST(req: NextRequest) {
     }
 
     throw lastError;
-  } catch (error: any) {
-    console.error("Gemini API Error:", error?.message || error);
-    const errMsg = error?.message || "";
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "";
     const message = errMsg.includes("API_KEY_INVALID")
-      ? "Invalid API key. Please check your GEMINI_API_KEY in .env.local."
+      ? "Authentication failed. Please check server configuration."
       : errMsg.includes("quota") || errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED")
-      ? "API quota exceeded on all available models. Please wait a minute and try again."
-      : errMsg || "Failed to get response from Gemini.";
+      ? "Service is temporarily busy due to high demand. Please try again in a moment."
+      : "Service is temporarily unavailable. Please try again.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

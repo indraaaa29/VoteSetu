@@ -1,18 +1,18 @@
 'use client';
 import Link from 'next/link';
-import ConstituencySearch from './components/ConstituencySearch';
-import { useLanguage } from './LanguageContext';
+import ConstituencySearch from '../components/ConstituencySearch';
+import { useLanguage } from '../lib/LanguageContext';
 
 const STATS = [
-  { value: '96.8 Cr',   label: 'Registered Voters' },
-  { value: '67.4%',     label: 'Voter Turnout 2024' },
-  { value: '543',       label: 'Lok Sabha Constituencies' },
+  { value: '96.8 Cr',   label: 'home.registered_voters' },
+  { value: '67.4%',     label: 'home.voter_turnout' },
+  { value: '543',       label: 'home.constituencies' },
 ];
 
 const ACTIONS = [
-  { href: '/documents', arrow: '→', title: 'Understand the Voting Process', desc: 'Step-by-step election guide' },
-  { href: '/checklist', arrow: '→', title: 'Smart Document Checklist',      desc: 'Track your registration readiness' },
-  { href: '/chat',      arrow: '→', title: 'Ask the Assistant',              desc: 'Get verified answers instantly' },
+  { href: '/documents', arrow: '→', title: 'home.understand_title', desc: 'home.understand_desc' },
+  { href: '/checklist', arrow: '→', title: 'home.checklist_title',  desc: 'home.checklist_desc' },
+  { href: '/chat',      arrow: '→', title: 'home.assistant_title',  desc: 'home.assistant_desc' },
 ];
 
 export default function HomePage() {
@@ -26,7 +26,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.16em',
         textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '2.5rem',
       }}>
-        {t("Election Commission of India · Civic Information System")}
+        {t("home.footer_eci")}
       </p>
 
       {/* Headline */}
@@ -35,7 +35,7 @@ export default function HomePage() {
         fontWeight: 700, color: 'var(--navy)', lineHeight: 1.1,
         letterSpacing: '-0.02em', marginBottom: '1.25rem',
       }}>
-        {t("India's Elections, Explained.")}
+        {t("home.hero_title")}
       </h1>
 
       {/* Body */}
@@ -43,7 +43,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-body)', fontSize: '1rem', lineHeight: 1.75,
         color: 'var(--muted)', maxWidth: 520, marginBottom: '3rem',
       }}>
-        {t("VoteSetu is a structured information system for Indian voters. Understand the election process, verify your eligibility, and ask questions — all from verified official sources.")}
+        {t("home.hero_desc")}
       </p>
 
       {/* Divider */}
@@ -105,7 +105,7 @@ export default function HomePage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.1em',
         textTransform: 'uppercase', color: 'var(--muted)', marginTop: '3rem',
       }}>
-        {t("Source: eci.gov.in · Data: April 2024")}
+        {t("home.footer_source")}
       </p>
     </main>
   );

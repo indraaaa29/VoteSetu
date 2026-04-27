@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '@/lib/LanguageContext';
 
 const ITEMS = [
-  { id: 'aadhaar', label: 'Aadhaar Card (Identity Proof)' },
-  { id: 'address', label: 'Address Proof' },
-  { id: 'photo',   label: 'Passport-size Photograph' },
+  { id: 'aadhaar', label: 'checklist.identity' },
+  { id: 'address', label: 'checklist.address' },
+  { id: 'photo',   label: 'checklist.photo' },
 ];
 
 export default function DocumentChecklist() {
@@ -42,7 +42,7 @@ export default function DocumentChecklist() {
           fontFamily: 'var(--font-head)', fontSize: '1.1rem', fontWeight: 700,
           color: 'var(--navy)', marginBottom: '1.5rem', letterSpacing: '-0.01em'
         }}>
-          {t("Required Documents Checklist")}
+          {t("checklist.title")}
         </h2>
         <div style={{ height: 120 }} />
       </div>
@@ -55,7 +55,7 @@ export default function DocumentChecklist() {
         fontFamily: 'var(--font-head)', fontSize: '1.1rem', fontWeight: 700,
         color: 'var(--navy)', marginBottom: '1.5rem', letterSpacing: '-0.01em'
       }}>
-        {t("Required Documents Checklist")}
+        {t("checklist.title")}
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
@@ -94,7 +94,7 @@ export default function DocumentChecklist() {
             fontFamily: 'var(--font-mono)', fontSize: '0.55rem',
             textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.1em', fontWeight: 600
           }}>
-            {t("Readiness Meter")}
+            {t("checklist.readiness")}
           </span>
           <span style={{
             fontFamily: 'var(--font-head)', fontSize: '1rem', fontWeight: 700,
@@ -118,7 +118,7 @@ export default function DocumentChecklist() {
           fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--muted)',
           marginTop: '0.8rem', fontWeight: 500
         }}>
-          {t("You are ")}{progress}{t("% ready for registration")}
+          {t("home.you_are")}{progress}% {t("checklist.ready_msg")}
         </p>
       </div>
     </div>

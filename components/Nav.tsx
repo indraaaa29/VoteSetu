@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '@/lib/LanguageContext';
 
 const LINKS = [
-  { href: '/',           label: 'Home' },
-  { href: '/documents',  label: 'Documents' },
-  { href: '/checklist',  label: 'Checklist' },
-  { href: '/chat',       label: 'Chat' },
+  { href: '/',           label: 'nav.home' },
+  { href: '/documents',  label: 'nav.documents' },
+  { href: '/checklist',  label: 'nav.checklist' },
+  { href: '/chat',       label: 'nav.chat' },
 ];
 
 export default function Nav() {
@@ -32,7 +32,7 @@ export default function Nav() {
         }
         .mobile-overlay {
           position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;
-          background: #fff; z-index: 99; display: flex; flexDirection: column;
+          background: #fff; z-index: 99; display: flex; flex-direction: column;
           padding: 2rem; gap: 1.5rem;
         }
       `}</style>

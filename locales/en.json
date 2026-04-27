@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "home": "Home",
+    "documents": "Documents",
+    "checklist": "Checklist",
+    "chat": "Chat"
+  },
+  "home": {
+    "hero_title": "India's Elections, Explained.",
+    "hero_desc": "VoteSetu is a structured information system for Indian voters. Understand the election process, verify your eligibility, and ask questions — all from verified official sources.",
+    "registered_voters": "Registered Voters",
+    "voter_turnout": "Voter Turnout 2024",
+    "constituencies": "Lok Sabha Constituencies",
+    "understand_title": "Understand the Voting Process",
+    "understand_desc": "Step-by-step election guide",
+    "checklist_title": "Smart Document Checklist",
+    "checklist_desc": "Track your registration readiness",
+    "assistant_title": "Ask the Assistant",
+    "assistant_desc": "Get verified answers instantly",
+    "you_are": "You are ",
+    "footer_eci": "Election Commission of India · Civic Information System",
+    "footer_source": "Source: eci.gov.in · Data: April 2024",
+    "personalize": "Personalize your experience",
+    "pin_error": "Data not available for this PIN",
+    "location_detected": "Location Detected",
+    "jamshedpur_east": "Jamshedpur East",
+    "new_delhi": "New Delhi",
+    "election_april_2029": "Next election: April 2029",
+    "election_may_2029": "Next election: May 2029"
+  },
+  "chat": {
+    "title": "Civic Assistant",
+    "subtitle": "Querying Official Electoral Roll Data",
+    "placeholder": "Ask about elections, eligibility, or documents...",
+    "welcome": "Welcome. I am the VoteSetu Civic Assistant — a service of the Election Commission of India. Ask any question about voter eligibility, registration, required documents, or the election process.",
+    "source_eci": "Election Commission of India — Civic Assistant",
+    "ask": "ASK",
+    "suggestion_eligibility": "Am I eligible to vote?",
+    "suggestion_docs": "What documents do I need?",
+    "suggestion_booth": "How do I find my polling booth?",
+    "suggestion_register": "How do I register to vote?",
+    "you": "You",
+    "response": "Response",
+    "verified": "Verified"
+  },
+  "docs": {
+    "meta": {
+      "verified": "Verified",
+      "updated": "Updated",
+      "ask_about": "Ask about this →",
+      "source": "Source: Representation of the People Act, 1950 · eci.gov.in"
+    },
+    "voting_process": {
+      "title": "How the Indian Election Process Works",
+      "sections": [
+        { "heading": "Overview", "content": "India conducts elections for the Lok Sabha and State Assemblies under the Election Commission of India (ECI), a constitutional body under Article 324. The process is governed by the Representation of the People Act, 1951." },
+        { "heading": "Key Stages", "content": ["ECI announces schedule and Model Code of Conduct begins", "Nomination of candidates by political parties", "Scrutiny and withdrawal period", "Election campaign period (2+ weeks)", "Polling day(s) — voters cast ballots at designated booths", "Counting of votes and declaration of results"] },
+        { "heading": "Governing Body", "content": "The Election Commission of India is fully independent of the executive and legislature. The Chief Election Commissioner is appointed by the President of India and can only be removed like a Supreme Court judge." }
+      ]
+    },
+    "eligibility": {
+      "title": "Voter Eligibility Criteria",
+      "sections": [
+        { "heading": "Basic Requirements", "content": ["Must be a citizen of India.", "Must be 18 years of age or older on the qualifying date (usually 1st January of the revision year).", "Must be ordinarily resident of the polling area where they wish to be enrolled.", "Must be enrolled in the electoral roll of that particular constituency."] },
+        { "heading": "Grounds for Disqualification", "content": ["Is not a citizen of India.", "Is confined in a prison under a sentence of imprisonment or is in the lawful custody of the police.", "Is of unsound mind and stands so declared by a competent court.", "Is for the time being disqualified under any law relating to corrupt practices in connection with elections."] },
+        { "heading": "Verification Protocol", "content": ["Submit Form 6 online via the official portal or physically at the designated Electoral Registration Office.", "Provide necessary documentation establishing identity, age, and ordinary residence (e.g., Aadhaar, utility bills, passport).", "Await field verification by the Booth Level Officer (BLO) to confirm residential status.", "To verify your enrollment, call toll-free 1950 or access the digital ledger at nvsp.in."] }
+      ]
+    },
+    "required_docs": {
+      "title": "Documents Required to Vote",
+      "sections": [
+        { "heading": "Primary Documents", "content": ["EPIC Card (Voter ID Card)", "Aadhaar Card", "Passport", "Driving License", "PAN Card (with photograph)"] },
+        { "heading": "Alternative Documents", "content": ["Bank or Post Office Passbook (with photo)", "MGNREGA Job Card", "Health Insurance Smart Card (ESIC/RSBY)", "Smart Card issued by RGI under NPR", "Pension documents (with photo)"] },
+        { "heading": "Important Note", "content": "You must carry at least one of the above documents to the polling booth. The Presiding Officer will verify your identity against the electoral roll before allowing you to vote." }
+      ]
+    },
+    "registration": {
+      "title": "How to Register as a Voter",
+      "sections": [
+        { "heading": "Online Registration", "content": ["Visit voters.eci.gov.in or download the Voter Helpline app.", "Select \"New Voter Registration — Form 6\".", "Fill all required fields: name, date of birth, address.", "Upload age proof, address proof, and one photograph.", "Submit and keep the reference number for tracking."] },
+        { "heading": "Offline Registration", "content": "Obtain Form 6 from your local Electoral Registration Office (ERO) or Booth Level Officer (BLO). Fill and submit with self-attested copies of age proof, address proof, and one photograph." }
+      ]
+    },
+    "evm_info": {
+      "title": "Electronic Voting Machines (EVM)",
+      "sections": [
+        { "heading": "What is an EVM", "content": "An EVM is a standalone, battery-operated device used since 1982. It consists of a Control Unit (with the Presiding Officer) and a Ballot Unit (in the voting compartment). Votes are stored electronically and cannot be tampered with once locked." },
+        { "heading": "How to Use an EVM", "content": ["Show identity document to the Polling Officer.", "Your name is marked in the electoral roll.", "You receive a voter slip; proceed to the Ballot Unit.", "Press the blue button next to your candidate's name.", "A beep and green light confirm your vote is recorded."] },
+        { "heading": "VVPAT", "content": "A Voter Verifiable Paper Audit Trail (VVPAT) displays your candidate's name and symbol on a paper slip for 7 seconds after you vote, then drops it into a sealed box for verification." }
+      ]
+    }
+  },
+  "checklist": {
+    "title": "Required Documents Checklist",
+    "readiness": "Readiness Meter",
+    "ready_msg": "ready for registration",
+    "identity": "Aadhaar Card (Identity Proof)",
+    "address": "Address Proof",
+    "photo": "Passport-size Photograph",
+    "desc": "Use this interactive checklist to track the documents you need for voter registration. Your progress is saved automatically on this device.",
+    "why_title": "Why these documents?",
+    "why_desc": "To register as a new voter (Form 6), the Election Commission requires proof of identity, proof of address, and a recent photograph to issue your EPIC (Voter ID) card.",
+    "persistence": "Source: voters.eci.gov.in · Data Persistence: Local Storage"
+  }
+}

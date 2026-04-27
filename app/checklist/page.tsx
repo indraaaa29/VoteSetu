@@ -1,6 +1,6 @@
 'use client';
-import DocumentChecklist from '../components/DocumentChecklist';
-import { useLanguage } from '../LanguageContext';
+import DocumentChecklist from '../../components/DocumentChecklist';
+import { useLanguage } from '../../lib/LanguageContext';
 
 export default function ChecklistPage() {
   const { t } = useLanguage();
@@ -12,7 +12,7 @@ export default function ChecklistPage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.16em',
         textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '2.5rem',
       }}>
-        {t("Election Commission of India · Civic Information System")}
+        {t("home.footer_eci")}
       </p>
 
       {/* Headline */}
@@ -21,7 +21,7 @@ export default function ChecklistPage() {
         fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2,
         letterSpacing: '-0.02em', marginBottom: '1.5rem',
       }}>
-        {t("Registration Readiness.")}
+        {t("checklist.title")}
       </h1>
 
       {/* Body */}
@@ -29,7 +29,7 @@ export default function ChecklistPage() {
         fontFamily: 'var(--font-body)', fontSize: '1rem', lineHeight: 1.75,
         color: 'var(--muted)', maxWidth: 520, marginBottom: '3rem',
       }}>
-        {t("Use this interactive checklist to track the documents you need for voter registration. Your progress is saved automatically on this device.")}
+        {t("checklist.desc")}
       </p>
 
       {/* Divider */}
@@ -47,13 +47,13 @@ export default function ChecklistPage() {
           fontFamily: 'var(--font-head)', fontSize: '0.9rem', fontWeight: 700, 
           color: 'var(--navy)', marginBottom: '0.75rem' 
         }}>
-          {t("Why these documents?")}
+          {t("checklist.why_title")}
         </h3>
         <p style={{ 
           fontFamily: 'var(--font-body)', fontSize: '0.85rem', lineHeight: 1.6, 
           color: 'var(--muted)' 
         }}>
-          {t("To register as a new voter (Form 6), the Election Commission requires proof of identity, proof of address, and a recent photograph to issue your EPIC (Voter ID) card.")}
+          {t("checklist.why_desc")}
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export default function ChecklistPage() {
         fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.1em',
         textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4rem',
       }}>
-        {t("Source: voters.eci.gov.in · Data Persistence: Local Storage")}
+        {t("checklist.persistence")}
       </p>
     </main>
   );

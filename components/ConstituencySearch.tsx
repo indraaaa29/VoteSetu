@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '@/lib/LanguageContext';
 
 const PIN_MAPPING: Record<string, { constituency: string; election: string }> = {
   "831001": {
-    constituency: "Jamshedpur East",
-    election: "Next election: April 2029"
+    constituency: "home.jamshedpur_east",
+    election: "home.election_april_2029"
   },
   "110001": {
-    constituency: "New Delhi",
-    election: "Next election: May 2029"
+    constituency: "home.new_delhi",
+    election: "home.election_may_2029"
   }
 };
 
@@ -38,7 +38,7 @@ export default function ConstituencySearch() {
       localStorage.setItem('votesetu_pin', pinCode);
     } else {
       setResult(null);
-      setError(t('Data not available for this PIN'));
+      setError(t('home.pin_error'));
       localStorage.removeItem('votesetu_pin');
     }
   };
@@ -75,7 +75,7 @@ export default function ConstituencySearch() {
           textTransform: 'uppercase',
           color: 'var(--muted)',
         }}>
-          {t("Personalize your experience")}
+          {t("home.personalize")}
         </label>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -145,7 +145,7 @@ export default function ConstituencySearch() {
               marginBottom: '0.5rem',
               fontWeight: 600,
             }}>
-              {t("Location Detected")}
+              {t("home.location_detected")}
             </div>
             <div style={{
               fontFamily: 'var(--font-head)',

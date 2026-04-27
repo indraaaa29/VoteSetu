@@ -5,7 +5,7 @@ export interface IntentResponse {
   source: string;
 }
 
-const INTENTS: Record<string, any> = {
+const INTENTS: Record<string, { keywords: string[]; en: IntentResponse; hi: IntentResponse; }> = {
   eligibility: {
     keywords: ["eligible", "age", "who can vote", "patrata", "umra"],
     en: {
