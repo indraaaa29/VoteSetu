@@ -28,16 +28,12 @@ let counter = 0;
 function uid() { return `msg-${++counter}-${Date.now()}`; }
 function genRef() { return `EC/QRY/${Math.floor(10000 + Math.random() * 90000)}`; }
 
-async function getGeminiResponse(messages: Msg[], currentLang: string): Promise<Omit<Msg, 'id' | 'role' | 'refCode'>> {
+async function getGeminiResponse(messages: Msg[], language: string): Promise<Omit<Msg, 'id' | 'role' | 'refCode'>> {
   try {
-    const lastMessage = messages[messages.length - 1].text;
-    const isHindi = /[\u0900-\u097F]/.test(lastMessage);
-    const targetLang = isHindi ? 'hi' : 'en';
-
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, language: targetLang }),
+      body: JSON.stringify({ messages, language }),
     });
     const data = await response.json();
     if (!response.ok || data.error) {
@@ -72,11 +68,13 @@ const WELCOME_MSG: Msg = {
 function ChatContent() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q');
-  const { lang, t } = useLanguage();
+  const { lang, isManual, t } = useLanguage();
 
   const [msgs, setMsgs] = useState<Msg[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [lastUsedLang, setLastUsedLang] = useState<'en' | 'hi'>(lang);
   const endRef = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
 
@@ -99,9 +97,17 @@ function ChatContent() {
     setMsgs(newMsgs);
     setInput('');
     setTyping(true);
+    
+    // Language priority: Manual selection > Auto-detection
+    let targetLang = lang;
+    if (!isManual) {
+      const isHindi = /[\u0900-\u097F]/.test(text);
+      targetLang = isHindi ? 'hi' : 'en';
+    }
+    setLastUsedLang(targetLang);
 
     try {
-      const ans = await getGeminiResponse(newMsgs, lang);
+      const ans = await getGeminiResponse(newMsgs, targetLang);
       setMsgs(prev => [...prev, {
         id: uid(),
         role: 'assistant',
@@ -111,7 +117,7 @@ function ChatContent() {
     } catch {
       // Retry once automatically
       try {
-        const ans = await getGeminiResponse(newMsgs, lang);
+        const ans = await getGeminiResponse(newMsgs, targetLang);
         setMsgs(prev => [...prev, {
           id: uid(),
           role: 'assistant',
@@ -134,9 +140,19 @@ function ChatContent() {
 
   return (
     <main style={{ display: 'flex', height: 'calc(100vh - var(--nav-h))', overflow: 'hidden' }}>
+      <style jsx>{`
+        @media (max-width: 860px) {
+          .desktop-sidebar { display: none !important; }
+          .chat-main { width: 100% !important; }
+          .chat-header { padding: 1.25rem 1rem !important; }
+          .chat-messages { padding: 1.5rem 1rem !important; }
+          .chat-suggestions { padding: 0.6rem 1rem !important; }
+          .chat-input-container { padding: 1rem 1.25rem !important; }
+        }
+      `}</style>
 
       {/* Sidebar */}
-      <aside style={{
+      <aside className="desktop-sidebar" style={{
         width: 200, flexShrink: 0, borderRight: '1px solid var(--border)',
         background: 'var(--sidebar-bg)', overflowY: 'auto', padding: '1.5rem 0',
       }}>
@@ -163,10 +179,10 @@ function ChatContent() {
       </aside>
 
       {/* Chat area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="chat-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{
+        <div className="chat-header" style={{
           padding: '1rem 2.5rem', borderBottom: '1px solid var(--border)',
           background: 'var(--bg)', flexShrink: 0,
         }}>
@@ -184,7 +200,7 @@ function ChatContent() {
         </div>
 
         {/* Suggestions */}
-        <div style={{
+        <div className="chat-suggestions" style={{
           padding: '0.6rem 2.5rem', borderBottom: '1px solid var(--border)',
           display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flexShrink: 0, background: 'var(--bg)',
         }}>
@@ -197,13 +213,13 @@ function ChatContent() {
             onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--navy)')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
             >
-              {s}
+              {t(s)}
             </button>
           ))}
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {msgs.map(m => m.role === 'user' ? (
             <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.35rem' }}>{t("You")}</span>
@@ -262,9 +278,10 @@ function ChatContent() {
         </div>
 
         {/* Input */}
-        <div style={{
-          borderTop: '1px solid var(--border)', padding: '0.85rem 2.5rem',
-          display: 'flex', gap: '0.65rem', background: '#fff', flexShrink: 0,
+        <div className="chat-input-container" style={{
+          borderTop: '1px solid var(--border)', padding: '1.25rem 2.5rem',
+          display: 'flex', gap: '10px', background: '#fff', flexShrink: 0,
+          alignItems: 'center'
         }}>
           <input
             value={input}
@@ -272,27 +289,68 @@ function ChatContent() {
             onKeyDown={e => e.key === 'Enter' && send(input)}
             placeholder={t("Ask about elections, eligibility, or documents...")}
             style={{
-              flex: 1, border: '1px solid var(--border)', padding: '0.6rem 1rem',
-              fontFamily: 'var(--font-body)', fontSize: '0.88rem', outline: 'none',
-              background: 'var(--bg)', color: 'var(--navy)', borderRadius: 0,
-              transition: 'border-color 0.1s',
+              flex: 1, border: '1px solid #E0E0E0', padding: '12px 16px',
+              fontFamily: 'var(--font-body)', fontSize: '0.95rem', outline: 'none',
+              background: '#F8F7F4', color: 'var(--navy)', borderRadius: '10px',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-            onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
-            onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+            onFocus={e => {
+              e.target.style.borderColor = 'var(--saffron)';
+              e.target.style.background = '#fff';
+            }}
+            onBlur={e => {
+              e.target.style.borderColor = '#E0E0E0';
+              e.target.style.background = '#F8F7F4';
+            }}
           />
           <button
             onClick={() => {
+              if (isRecording) {
+                (window as any)._recognition?.stop();
+                return;
+              }
+
               const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
               if (SpeechRecognition) {
                 const recognition = new SpeechRecognition();
-                recognition.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
-                recognition.onresult = (event: any) => {
-                  const transcript = event.results[0][0].transcript;
-                  setInput(transcript);
-                  send(transcript);
+                (window as any)._recognition = recognition;
+                
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = (isManual ? lang : lastUsedLang) === 'hi' ? 'hi-IN' : 'en-US';
+                
+                recognition.onstart = () => setIsRecording(true);
+                recognition.onend = () => {
+                  setIsRecording(false);
+                  (window as any)._recognition = null;
                 };
+                
+                recognition.onresult = (event: any) => {
+                  let interim = '';
+                  let final = '';
+
+                  for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                      final += event.results[i][0].transcript;
+                    } else {
+                      interim += event.results[i][0].transcript;
+                    }
+                  }
+
+                  const currentText = final || interim;
+                  if (currentText) setInput(currentText);
+
+                  if (final) {
+                    send(final);
+                    recognition.stop();
+                  }
+                };
+
                 recognition.onerror = (event: any) => {
-                  alert(lang === 'hi' ? "आवाज़ पहचानी नहीं गई, कृपया पुनः प्रयास करें" : "Voice not recognized, please try again");
+                  setIsRecording(false);
+                  if (event.error !== 'no-speech') {
+                    alert(lang === 'hi' ? "आवाज़ पहचानी नहीं गई, कृपया पुनः प्रयास करें" : "Voice not recognized, please try again");
+                  }
                 }
                 recognition.start();
               } else {
@@ -300,22 +358,32 @@ function ChatContent() {
               }
             }}
             style={{
-              background: 'white', border: '1px solid var(--border)', borderLeft: 'none',
-              padding: '0 0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center',
-              cursor: 'pointer'
+              width: '42px', height: '42px', borderRadius: '50%',
+              background: isRecording ? 'rgba(255, 153, 51, 0.1)' : '#F0F0EE', 
+              border: 'none',
+              color: isRecording ? 'var(--saffron)' : 'var(--muted)', 
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease',
+              animation: isRecording ? 'micPulse 1.4s infinite ease-out, micBreathe 1.4s infinite ease-in-out' : 'none',
+              position: 'relative'
             }}
+            onMouseEnter={e => !isRecording && (e.currentTarget.style.background = '#E5E5E3')}
+            onMouseLeave={e => !isRecording && (e.currentTarget.style.background = '#F0F0EE')}
             title="Voice Input"
           >
-            <span style={{ fontSize: '1.2rem' }}>🎙️</span>
+            <span style={{ 
+              fontSize: '1.1rem',
+              transition: 'transform 0.3s ease'
+            }}>🎙️</span>
           </button>
           <button onClick={() => send(input)} style={{
-            fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
             background: 'var(--saffron)', color: 'var(--navy)',
-            border: 'none', padding: '0 1.5rem', cursor: 'pointer',
-            transition: 'opacity 0.1s',
+            border: 'none', height: '42px', padding: '0 1.5rem', cursor: 'pointer',
+            borderRadius: '8px', transition: 'all 0.15s',
           }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             {t("Ask")}

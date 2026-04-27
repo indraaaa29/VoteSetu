@@ -6,10 +6,12 @@ type Lang = 'en' | 'hi';
 const LanguageContext = createContext<{
   lang: Lang;
   setLang: (lang: Lang) => void;
+  isManual: boolean;
   t: (key: string) => string;
 }>({
   lang: 'en',
   setLang: () => {},
+  isManual: false,
   t: (key) => key,
 });
 
@@ -39,6 +41,10 @@ const DICT: Record<string, {en: string, hi: string}> = {
   "Civic Assistant": {en: "Civic Assistant", hi: "नागरिक सहायक"},
   "Querying Official Electoral Roll Data": {en: "Querying Official Electoral Roll Data", hi: "आधिकारिक मतदाता सूची डेटा पूछताछ"},
   "Ask about elections, eligibility, or documents...": {en: "Ask about elections, eligibility, or documents...", hi: "चुनाव, पात्रता, या दस्तावेज़ के बारे में पूछें..."},
+  "Am I eligible to vote?": {en: "Am I eligible to vote?", hi: "क्या मैं वोट देने के लिए पात्र हूँ?"},
+  "What documents do I need?": {en: "What documents do I need?", hi: "मुझे किन दस्तावेजों की आवश्यकता है?"},
+  "How do I find my polling booth?": {en: "How do I find my polling booth?", hi: "मैं अपना मतदान केंद्र कैसे खोजूँ?"},
+  "How do I register to vote?": {en: "How do I register to vote?", hi: "मैं वोट देने के लिए पंजीकरण कैसे करूँ?"},
   "Ask": {en: "Ask", hi: "पूछें"},
   "You": {en: "You", hi: "आप"},
   "Response": {en: "Response", hi: "प्रतिक्रिया"},
@@ -91,17 +97,22 @@ const DICT: Record<string, {en: string, hi: string}> = {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en');
+  const [isManual, setIsManual] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('lang') as Lang;
+    const manual = localStorage.getItem('lang_manual') === 'true';
     if (saved === 'hi' || saved === 'en') {
       setLangState(saved);
+      setIsManual(manual);
     }
   }, []);
 
   const setLang = (l: Lang) => {
     setLangState(l);
+    setIsManual(true);
     localStorage.setItem('lang', l);
+    localStorage.setItem('lang_manual', 'true');
   };
 
   const t = (key: string) => {
@@ -110,7 +121,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, isManual, t }}>
       {children}
     </LanguageContext.Provider>
   );

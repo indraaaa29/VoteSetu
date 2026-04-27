@@ -38,3 +38,16 @@ button { font-family: inherit; cursor: pointer; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Mic Animations */
+@keyframes micPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 153, 51, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(255, 153, 51, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 153, 51, 0); }
+}
+
+@keyframes micBreathe {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
