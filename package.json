@@ -1,14 +1,15 @@
 {
   "name": "votesetu",
   "version": "0.1.0",
-  "description": "A document-first civic assistant that helps users understand the Indian election process.",
+  "description": "A document-first civic assistant that helps users understand the Indian election process through structured documents and an AI chatbot.",
   "keywords": [
     "nextjs",
     "ai",
     "civic-tech",
     "chatbot",
     "india",
-    "web-app"
+    "web-app",
+    "gemini"
   ],
   "private": true,
   "scripts": {
