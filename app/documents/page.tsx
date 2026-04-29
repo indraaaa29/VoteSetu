@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '../../lib/LanguageContext';
 
@@ -23,13 +24,15 @@ function Section({ s }: { s: { heading: string; content: string | string[]; type
   const isList = Array.isArray(s.content);
 
   return (
-    <div style={{ paddingTop: '2rem', paddingBottom: '2rem', borderBottom: '1px solid var(--border)' }}>
-      <button onClick={() => setOpen(o => !o)} style={{
-        display: 'flex', alignItems: 'center', gap: '0.6rem',
-        background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
-        marginBottom: open ? '0.85rem' : 0,
-      }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--saffron)', fontWeight: 600, minWidth: 10 }}>
+    <section style={{ paddingTop: '2rem', paddingBottom: '2rem', borderBottom: '1px solid var(--border)' }}>
+      <button onClick={() => setOpen(o => !o)} 
+        aria-expanded={open}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+          background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+          marginBottom: open ? '0.85rem' : 0,
+        }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--saffron)', fontWeight: 600, minWidth: 10 }} aria-hidden="true">
           {open ? '−' : '+'}
         </span>
         <h3 style={{
@@ -52,23 +55,45 @@ function Section({ s }: { s: { heading: string; content: string | string[]; type
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
 export default function DocumentsPage() {
   const { t } = useLanguage();
-  const [activeId, setActiveId] = useState('eligibility');
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', fontFamily: 'var(--font-mono)', color: 'var(--muted)', fontSize: '0.8rem' }}>{t("chat.loading")}</div>}>
+      <DocumentsContent />
+    </Suspense>
+  );
+}
 
-  const title = t(`docs.${activeId}.title`);
-  const sections = t(`docs.${activeId}.sections`) || [];
-  const activeDoc = DOCS.find(d => d.id === activeId);
+function DocumentsContent() {
+  const { t } = useLanguage();
+  const searchParams = useSearchParams();
+  const docParam = searchParams.get('doc');
+  
+  const [activeId, setActiveId] = useState(docParam || 'eligibility');
+  
+  useEffect(() => {
+    if (docParam && docParam !== activeId) {
+      setActiveId(docParam);
+    }
+  }, [docParam]);
+
+  // Ensure activeId is valid, fallback to eligibility
+  const isValid = DOCS.some(d => d.id === activeId);
+  const currentId = isValid ? activeId : 'eligibility';
+
+  const title = t(`docs.${currentId}.title`);
+  const sections = t(`docs.${currentId}.sections`) || [];
+  const activeDoc = DOCS.find(d => d.id === currentId);
 
   return (
     <main style={{ display: 'flex', height: 'calc(100vh - var(--nav-h))', overflow: 'hidden' }}>
 
       {/* Sidebar */}
-      <aside style={{
+      <aside aria-label="Document categories" style={{
         width: 200, flexShrink: 0,
         borderRight: '1px solid var(--border)',
         background: 'var(--sidebar-bg)',
@@ -81,13 +106,16 @@ export default function DocumentsPage() {
           {t("nav.documents")}
         </p>
         {DOCS.map(d => (
-          <button key={d.id} onClick={() => setActiveId(d.id)} style={{
-            display: 'block', width: '100%', textAlign: 'left',
-            padding: '0.65rem 1.25rem', background: 'none', border: 'none', cursor: 'pointer',
-            borderLeft: `2px solid ${activeId === d.id ? 'var(--saffron)' : 'transparent'}`,
-            backgroundColor: activeId === d.id ? 'rgba(255,153,51,0.06)' : 'transparent',
-            transition: 'background 0.1s',
-          }}>
+          <button key={d.id} 
+            onClick={() => setActiveId(d.id)} 
+            aria-current={activeId === d.id ? 'true' : undefined}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              padding: '0.65rem 1.25rem', background: 'none', border: 'none', cursor: 'pointer',
+              borderLeft: `2px solid ${activeId === d.id ? 'var(--saffron)' : 'transparent'}`,
+              backgroundColor: activeId === d.id ? 'rgba(255,153,51,0.06)' : 'transparent',
+              transition: 'background 0.1s',
+            }}>
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: '0.5rem', letterSpacing: '0.12em',
               textTransform: 'uppercase', color: activeId === d.id ? 'var(--saffron)' : 'var(--muted)',
@@ -133,7 +161,7 @@ export default function DocumentsPage() {
             ✓ {t("docs.meta.verified")}
           </span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.56rem', color: 'var(--muted)', letterSpacing: '0.08em' }}>
-            Election Commission of India
+            {t("chat.source_default")}
           </span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.56rem', color: 'var(--muted)' }}>
             {t("docs.meta.updated")} April 2024

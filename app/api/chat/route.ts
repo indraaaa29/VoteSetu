@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       console.error("GOOGLE_API_KEY is missing from environment variables.");
       return NextResponse.json(
-        { error: "API key not configured. Add GOOGLE_API_KEY to .env.local and restart the server." },
+        { message: "API key not configured. Add GOOGLE_API_KEY to .env.local and restart the server." },
         { status: 500 }
       );
     }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     const { messages, language } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "No messages provided." }, { status: 400 });
+      return NextResponse.json({ message: "No messages provided." }, { status: 400 });
     }
 
     const langInstruction = language === 'hi' ? "हिंदी में उत्तर दें। सरल और स्पष्ट भाषा का उपयोग करें।" : "Respond in English. Use simple, clear language.";
@@ -81,9 +81,9 @@ export async function POST(req: NextRequest) {
     }
 
 
-    // Build history: skip the first welcome message (synthetic, not from the model)
-    // and skip the last message (sent via sendMessage).
-    const rawHistory = messages.slice(1, -1);
+    // Build history: skip the first welcome message and keep only the last 10
+    // to keep the context window small and improve performance.
+    const rawHistory = messages.slice(1, -1).slice(-10);
     const history: { role: "user" | "model"; parts: { text: string }[] }[] = [];
 
     for (const m of rawHistory) {
@@ -145,13 +145,8 @@ export async function POST(req: NextRequest) {
 
     throw lastError;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? error.message : "";
-    const message = errMsg.includes("API_KEY_INVALID")
-      ? "Authentication failed. Please check server configuration."
-      : errMsg.includes("quota") || errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED")
-      ? "Service is temporarily busy due to high demand. Please try again in a moment."
-      : "Service is temporarily unavailable. Please try again.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("API Route Error:", error);
+    return NextResponse.json({ message: "Service busy, try again" }, { status: 500 });
   }
 }
 

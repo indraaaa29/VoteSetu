@@ -1,7 +1,12 @@
 'use client';
 import Link from 'next/link';
-import ConstituencySearch from '../components/ConstituencySearch';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '../lib/LanguageContext';
+
+const ConstituencySearch = dynamic(() => import('../components/ConstituencySearch'), {
+  ssr: false,
+  loading: () => <div style={{ height: '100px', background: 'var(--sidebar-bg)', borderRadius: '8px' }} />
+});
 
 const STATS = [
   { value: '96.8 Cr',   label: 'home.registered_voters' },
@@ -50,7 +55,7 @@ export default function HomePage() {
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 0 2.5rem' }} />
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0', marginBottom: '2.5rem' }}>
+      <section aria-label="Election Statistics" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0', marginBottom: '2.5rem' }}>
         {STATS.map((s, i) => (
           <div key={s.label} style={{
             padding: '0 0 0 1.5rem',
@@ -70,7 +75,7 @@ export default function HomePage() {
             </div>
           </div>
         ))}
-      </div>
+      </section>
 
       {/* Personalization Section */}
       <ConstituencySearch />
@@ -79,34 +84,38 @@ export default function HomePage() {
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 0 0' }} />
 
       {/* Actions */}
-      {ACTIONS.map((a, i) => (
-        <Link key={a.title} href={a.href} style={{
-          display: 'grid', gridTemplateColumns: '1.5rem 1fr auto',
-          alignItems: 'center', gap: '1rem',
-          padding: '1.25rem 0',
-          borderBottom: '1px solid var(--border)',
-          color: 'var(--navy)', textDecoration: 'none',
-          transition: 'background 0.1s',
-        }}>
-          <span style={{ fontFamily: 'var(--font-head)', fontSize: '1.1rem', color: 'var(--saffron)', fontWeight: 700 }}>
-            {a.arrow}
-          </span>
-          <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--navy)' }}>
-            {t(a.title)}
-          </span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-            {t(a.desc)}
-          </span>
-        </Link>
-      ))}
+      <nav aria-label="Quick Actions">
+        {ACTIONS.map((a, i) => (
+          <Link key={a.title} href={a.href} style={{
+            display: 'grid', gridTemplateColumns: '1.5rem 1fr auto',
+            alignItems: 'center', gap: '1rem',
+            padding: '1.25rem 0',
+            borderBottom: '1px solid var(--border)',
+            color: 'var(--navy)', textDecoration: 'none',
+            transition: 'background 0.1s',
+          }}>
+            <span style={{ fontFamily: 'var(--font-head)', fontSize: '1.1rem', color: 'var(--saffron)', fontWeight: 700 }} aria-hidden="true">
+              {a.arrow}
+            </span>
+            <span style={{ fontFamily: 'var(--font-head)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--navy)' }}>
+              {t(a.title)}
+            </span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+              {t(a.desc)}
+            </span>
+          </Link>
+        ))}
+      </nav>
 
       {/* Footer */}
-      <p style={{
-        fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: 'var(--muted)', marginTop: '3rem',
-      }}>
-        {t("home.footer_source")}
-      </p>
+      <footer style={{ marginTop: '3rem' }}>
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.1em',
+          textTransform: 'uppercase', color: 'var(--muted)',
+        }}>
+          {t("home.footer_source")}
+        </p>
+      </footer>
     </main>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 const ITEMS = [
@@ -8,7 +8,7 @@ const ITEMS = [
   { id: 'photo',   label: 'checklist.photo' },
 ];
 
-export default function DocumentChecklist() {
+const DocumentChecklist = memo(() => {
   const { t } = useLanguage();
   const [state, setState] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
@@ -25,11 +25,13 @@ export default function DocumentChecklist() {
     setMounted(true);
   }, []);
 
-  const toggle = (id: string) => {
-    const newState = { ...state, [id]: !state[id] };
-    setState(newState);
-    localStorage.setItem('checklist', JSON.stringify(newState));
-  };
+  const toggle = useCallback((id: string) => {
+    setState(prev => {
+      const newState = { ...prev, [id]: !prev[id] };
+      localStorage.setItem('checklist', JSON.stringify(newState));
+      return newState;
+    });
+  }, []);
 
   const completedCount = ITEMS.filter(item => state[item.id]).length;
   const progress = Math.floor((completedCount / ITEMS.length) * 100);
@@ -90,7 +92,7 @@ export default function DocumentChecklist() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
           marginBottom: '0.6rem'
         }}>
-          <span style={{
+          <span id="readiness-label" style={{
             fontFamily: 'var(--font-mono)', fontSize: '0.55rem',
             textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.1em', fontWeight: 600
           }}>
@@ -104,10 +106,16 @@ export default function DocumentChecklist() {
           </span>
         </div>
 
-        <div style={{
-          height: '6px', background: 'var(--border)', borderRadius: '3px',
-          overflow: 'hidden', position: 'relative'
-        }}>
+        <div 
+          role="progressbar" 
+          aria-valuenow={progress} 
+          aria-valuemin={0} 
+          aria-valuemax={100}
+          aria-labelledby="readiness-label"
+          style={{
+            height: '6px', background: 'var(--border)', borderRadius: '3px',
+            overflow: 'hidden', position: 'relative'
+          }}>
           <div style={{
             height: '100%', width: `${progress}%`, background: 'var(--saffron)',
             transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -123,4 +131,7 @@ export default function DocumentChecklist() {
       </div>
     </div>
   );
-}
+});
+
+DocumentChecklist.displayName = 'DocumentChecklist';
+export default DocumentChecklist;

@@ -3,7 +3,13 @@
     "home": "Home",
     "documents": "Documents",
     "checklist": "Checklist",
-    "chat": "Chat"
+    "chat": "Chat",
+    "voting_process": "Voting Process",
+    "eligibility": "Eligibility",
+    "required_docs": "Required Docs",
+    "registration": "Reg Guide",
+    "evm_info": "EVM Info",
+    "process": "Process"
   },
   "home": {
     "hero_title": "India's Elections, Explained.",
@@ -11,6 +17,9 @@
     "registered_voters": "Registered Voters",
     "voter_turnout": "Voter Turnout 2024",
     "constituencies": "Lok Sabha Constituencies",
+    "stat_voters_value": "96.8 Cr",
+    "stat_turnout_value": "67.4%",
+    "stat_constituencies_value": "543",
     "understand_title": "Understand the Voting Process",
     "understand_desc": "Step-by-step election guide",
     "checklist_title": "Smart Document Checklist",
@@ -21,6 +30,7 @@
     "footer_eci": "Election Commission of India · Civic Information System",
     "footer_source": "Source: eci.gov.in · Data: April 2024",
     "personalize": "Personalize your experience",
+    "pin_placeholder": "e.g. 831001",
     "pin_error": "Data not available for this PIN",
     "location_detected": "Location Detected",
     "jamshedpur_east": "Jamshedpur East",
@@ -41,7 +51,14 @@
     "suggestion_register": "How do I register to vote?",
     "you": "You",
     "response": "Response",
-    "verified": "Verified"
+    "verified": "Verified",
+    "processing": "Processing · · ·",
+    "loading": "Loading…",
+    "voice_not_supported": "Voice input not supported in this browser.",
+    "voice_error": "Voice not recognized, please try again",
+    "error_generic": "An unexpected error occurred. Please try again.",
+    "system_error": "System Error",
+    "source_default": "Election Commission of India"
   },
   "docs": {
     "meta": {

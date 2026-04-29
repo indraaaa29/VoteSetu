@@ -3,7 +3,13 @@
     "home": "होम",
     "documents": "दस्तावेज़",
     "checklist": "चेकलिस्ट",
-    "chat": "चैट"
+    "chat": "चैट",
+    "voting_process": "मतदान प्रक्रिया",
+    "eligibility": "पात्रता",
+    "required_docs": "आवश्यक दस्तावेज़",
+    "registration": "पंजीकरण मार्गदर्शिका",
+    "evm_info": "EVM जानकारी",
+    "process": "प्रक्रिया"
   },
   "home": {
     "hero_title": "भारत के चुनाव, समझाए गए।",
@@ -11,6 +17,9 @@
     "registered_voters": "पंजीकृत मतदाता",
     "voter_turnout": "मतदाता मतदान 2024",
     "constituencies": "लोकसभा क्षेत्र",
+    "stat_voters_value": "96.8 करोड़",
+    "stat_turnout_value": "67.4%",
+    "stat_constituencies_value": "543",
     "understand_title": "मतदान प्रक्रिया को समझें",
     "understand_desc": "चरण-दर-चरण चुनाव मार्गदर्शिका",
     "checklist_title": "स्मार्ट दस्तावेज़ चेकलिस्ट",
@@ -21,6 +30,7 @@
     "footer_eci": "भारत निर्वाचन आयोग · नागरिक सूचना प्रणाली",
     "footer_source": "स्रोत: eci.gov.in · डेटा: अप्रैल 2024",
     "personalize": "अपना अनुभव व्यक्तिगत करें",
+    "pin_placeholder": "उदा. 831001",
     "pin_error": "इस पिन के लिए डेटा उपलब्ध नहीं है",
     "location_detected": "स्थान का पता चला",
     "jamshedpur_east": "जमशेदपुर पूर्व",
@@ -41,7 +51,14 @@
     "suggestion_register": "मैं वोट देने के लिए पंजीकरण कैसे करूँ?",
     "you": "आप",
     "response": "प्रतिक्रिया",
-    "verified": "सत्यापित"
+    "verified": "सत्यापित",
+    "processing": "प्रक्रिया जारी है · · ·",
+    "loading": "लोड हो रहा है…",
+    "voice_not_supported": "इस ब्राउज़र में वॉयस इनपुट समर्थित नहीं है।",
+    "voice_error": "आवाज़ पहचानी नहीं गई, कृपया पुनः प्रयास करें",
+    "error_generic": "एक अप्रत्याशित त्रुटि हुई। कृपया पुन: प्रयास करें।",
+    "system_error": "सिस्टम त्रुटि",
+    "source_default": "भारत निर्वाचन आयोग"
   },
   "docs": {
     "meta": {

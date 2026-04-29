@@ -1,6 +1,11 @@
 'use client';
-import DocumentChecklist from '../../components/DocumentChecklist';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '../../lib/LanguageContext';
+
+const DocumentChecklist = dynamic(() => import('../../components/DocumentChecklist'), {
+  ssr: false,
+  loading: () => <div style={{ height: '200px', background: 'var(--sidebar-bg)', borderRadius: '2px', animation: 'pulse 1.5s infinite' }} />
+});
 
 export default function ChecklistPage() {
   const { t } = useLanguage();
@@ -39,23 +44,23 @@ export default function ChecklistPage() {
       <DocumentChecklist />
 
       {/* Info Box */}
-      <div style={{ 
+      <section style={{ 
         marginTop: '5rem', padding: '2rem', background: 'var(--sidebar-bg)', 
         borderRadius: '2px', border: '1px solid var(--border)' 
-      }}>
-        <h3 style={{ 
+      }} aria-labelledby="why-checklist">
+        <h2 id="why-checklist" style={{ 
           fontFamily: 'var(--font-head)', fontSize: '0.9rem', fontWeight: 700, 
           color: 'var(--navy)', marginBottom: '0.75rem' 
         }}>
           {t("checklist.why_title")}
-        </h3>
+        </h2>
         <p style={{ 
           fontFamily: 'var(--font-body)', fontSize: '0.85rem', lineHeight: 1.6, 
           color: 'var(--muted)' 
         }}>
           {t("checklist.why_desc")}
         </p>
-      </div>
+      </section>
 
       {/* Footer */}
       <p style={{

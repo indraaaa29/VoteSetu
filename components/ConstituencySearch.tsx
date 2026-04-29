@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 const PIN_MAPPING: Record<string, { constituency: string; election: string }> = {
@@ -14,24 +14,14 @@ const PIN_MAPPING: Record<string, { constituency: string; election: string }> = 
   }
 };
 
-export default function ConstituencySearch() {
+const ConstituencySearch = memo(() => {
   const { t } = useLanguage();
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState<{ constituency: string; election: string } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedPin = localStorage.getItem('votesetu_pin');
-    if (savedPin) {
-      setPin(savedPin);
-      searchPIN(savedPin);
-    }
-    setIsLoaded(true);
-  }, []);
-
-  const searchPIN = (pinCode: string) => {
+  const searchPIN = useCallback((pinCode: string) => {
     if (PIN_MAPPING[pinCode]) {
       setResult(PIN_MAPPING[pinCode]);
       setError('');
@@ -41,9 +31,19 @@ export default function ConstituencySearch() {
       setError(t('home.pin_error'));
       localStorage.removeItem('votesetu_pin');
     }
-  };
+  }, [t]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedPin = localStorage.getItem('votesetu_pin');
+    if (savedPin) {
+      setPin(savedPin);
+      searchPIN(savedPin);
+    }
+    setIsLoaded(true);
+  }, [searchPIN]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     setPin(value);
     setError('');
@@ -53,7 +53,7 @@ export default function ConstituencySearch() {
     } else {
       setResult(null);
     }
-  };
+  }, [searchPIN]);
 
   if (!isLoaded) return null;
 
@@ -83,7 +83,7 @@ export default function ConstituencySearch() {
             id="pin-input"
             type="text"
             inputMode="numeric"
-            placeholder="e.g. 831001"
+            placeholder={t("home.pin_placeholder")}
             value={pin}
             onChange={handleInputChange}
             style={{
@@ -179,4 +179,7 @@ export default function ConstituencySearch() {
       `}</style>
     </div>
   );
-}
+});
+
+ConstituencySearch.displayName = 'ConstituencySearch';
+export default ConstituencySearch;

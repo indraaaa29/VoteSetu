@@ -16,8 +16,17 @@ export default function Nav() {
   const { lang, setLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Close mobile menu on ESC
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   return (
-    <nav className="nav-container" style={{
+    <nav className="nav-container" aria-label="Main Navigation" style={{
       position: 'fixed', top: 0, left: 0, right: 0, height: 'var(--nav-h)',
       background: 'var(--bg)', borderBottom: '1px solid var(--border)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -37,7 +46,7 @@ export default function Nav() {
         }
       `}</style>
 
-      <Link href="/" className="logo-text" style={{
+      <Link href="/" className="logo-text" aria-label="VoteSetu Home" style={{
         fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: '0.95rem',
         color: 'var(--navy)', letterSpacing: '-0.01em',
       }}>
@@ -45,11 +54,11 @@ export default function Nav() {
       </Link>
 
       {/* Desktop Links */}
-      <div className="desktop-links" style={{ display: 'flex', gap: '0' }}>
+      <div className="desktop-links" role="menubar" style={{ display: 'flex', gap: '0' }}>
         {LINKS.map(({ href, label }) => {
           const active = path === href || (href !== '/' && path.startsWith(href));
           return (
-            <Link key={href} href={href} className="nav-link-item" style={{
+            <Link key={href} href={href} role="menuitem" aria-current={active ? 'page' : undefined} className="nav-link-item" style={{
               fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: active ? 600 : 400,
               color: active ? 'var(--navy)' : 'var(--muted)',
               padding: '0 1rem', height: 'var(--nav-h)', display: 'flex', alignItems: 'center',
@@ -63,6 +72,7 @@ export default function Nav() {
         <button
           onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
           className="lang-toggle"
+          aria-label={lang === 'en' ? "Switch to Hindi" : "अंग्रेजी में बदलें"}
           style={{
             background: 'transparent', border: 'none', cursor: 'pointer',
             fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600,
@@ -70,9 +80,9 @@ export default function Nav() {
             gap: '0.3rem'
           }}
         >
-          <span style={{ opacity: lang === 'en' ? 1 : 0.5 }}>EN</span>
-          <span style={{ opacity: 0.5 }}>|</span>
-          <span style={{ opacity: lang === 'hi' ? 1 : 0.5, fontSize: '0.85rem' }}>हिंदी</span>
+          <span style={{ opacity: lang === 'en' ? 1 : 0.5 }} aria-hidden="true">EN</span>
+          <span style={{ opacity: 0.5 }} aria-hidden="true">|</span>
+          <span style={{ opacity: lang === 'hi' ? 1 : 0.5, fontSize: '0.85rem' }} aria-hidden="true">हिंदी</span>
         </button>
       </div>
 
@@ -80,6 +90,7 @@ export default function Nav() {
       <div style={{ display: 'none', alignItems: 'center', gap: '1rem' }} className="mobile-menu-btn">
         <button
           onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
+          aria-label={lang === 'en' ? "Switch to Hindi" : "अंग्रेजी में बदलें"}
           style={{
             background: 'transparent', border: 'none',
             fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 600, color: 'var(--navy)'
@@ -89,6 +100,8 @@ export default function Nav() {
         </button>
         <button 
           onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "Close menu" : "Open menu"}
           style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer' }}
         >
           <div style={{ width: '18px', height: '2px', background: 'var(--navy)', marginBottom: '4px', transition: '0.3s' }} />
@@ -99,7 +112,7 @@ export default function Nav() {
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="mobile-overlay" onClick={() => setIsOpen(false)}>
+        <div className="mobile-overlay" onClick={() => setIsOpen(false)} role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
           {LINKS.map(({ href, label }) => (
             <Link key={href} href={href} style={{
               fontFamily: 'var(--font-head)', fontSize: '1.5rem', fontWeight: 600,
