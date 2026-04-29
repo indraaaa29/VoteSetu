@@ -10,19 +10,13 @@ Your goal is to provide accurate, concise, and helpful information about electio
 Official Knowledge Base:
 ${CIVIC_KNOWLEDGE}
 
-CRITICAL INTELLIGENCE & FOLLOW-UP RULES:
-1. If the user asks for a specific number or data point (like "Just give me the age"):
-   -> Return ONLY the direct answer in the "text" field.
-   -> Do NOT repeat the previous explanation.
-   -> Leave "bullets" empty.
-2. If exact real-time data is unavailable, provide a reasonable estimate (e.g., "Approximately 96-98 crore").
-
 CRITICAL FORMATTING RULES:
-1. You MUST respond with a JSON object containing EXACTLY two keys: "text" and "bullets".
-2. "text": A concise explanation (1-2 lines). PLAIN TEXT ONLY. No markdown (**bold**, *italics*, etc.).
-3. "bullets": An array of strings for lists, steps, or requirements. Each string is a single item. NO MARKDOWN. NO BULLET SYMBOLS (- or *) in the strings.
-4. If there is NO list, return an empty array [] for "bullets".
-5. ALWAYS extract multiple requirements or steps into the "bullets" array instead of paragraph text.
+1. NEVER copy exact content. ALWAYS paraphrase in your own words.
+2. You MUST respond with a JSON object containing EXACTLY two keys: "text" and "bullets".
+3. "text": A concise explanation (1-2 lines). PLAIN TEXT ONLY. No markdown (**bold**, *italics*, etc.).
+4. "bullets": An array of strings for lists, steps, or requirements. Each string is a single item. NO MARKDOWN. NO BULLET SYMBOLS (- or *) in the strings.
+5. If there is NO list, return an empty array [] for "bullets".
+6. ALWAYS extract multiple requirements or steps into the "bullets" array instead of paragraph text.
 
 Example JSON output for a list:
 {
@@ -41,6 +35,7 @@ Example JSON output for a direct follow-up:
 }
 
 Tone: Professional, authoritative, yet helpful.
+REMEMBER: Always paraphrase. Never copy exact content from any source.
 `;
 
 // Models to try in order of preference — if one hits quota, the next is tried
@@ -69,13 +64,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "No messages provided." }, { status: 400 });
     }
 
+    const lastMessage = messages[messages.length - 1].text;
+    
+    if (!lastMessage || typeof lastMessage !== 'string' || lastMessage.trim().length === 0) {
+      return NextResponse.json({ message: "Please enter a valid question." }, { status: 400 });
+    }
+    
+    if (lastMessage.length > 800) {
+      return NextResponse.json({ message: "Question is too long. Please keep it under 800 characters." }, { status: 400 });
+    }
+
+    const sanitizedInput = lastMessage.replace(/<[^>]*>/g, '').trim();
+
     const langInstruction = language === 'hi' ? "हिंदी में उत्तर दें। सरल और स्पष्ट भाषा का उपयोग करें।" : "Respond in English. Use simple, clear language.";
     const finalSystemPrompt = SYSTEM_PROMPT + `\n\nLANGUAGE INSTRUCTION: ${langInstruction}`;
 
-    const lastMessage = messages[messages.length - 1].text;
-    
-    // HYBRID SYSTEM: Intent Interceptor
-    const intercepted = interceptIntent(lastMessage, language);
+    const intercepted = interceptIntent(sanitizedInput, language);
     if (intercepted) {
       return NextResponse.json(intercepted);
     }
@@ -111,15 +115,15 @@ export async function POST(req: NextRequest) {
         });
 
         const chat = model.startChat({ history });
-        const result = await chat.sendMessage(lastMessage);
+        const result = await chat.sendMessage(sanitizedInput);
         const rawText = result.response.text();
         
         let parsed;
         try {
           parsed = JSON.parse(rawText);
         } catch (e) {
-          // Fallback if model ignored JSON directive
-          parsed = { text: rawText.replace(/\*\*/g, ""), bullets: [] };
+          const cleanedText = rawText.replace(/\*\*/g, "").replace(/\*/g, "").replace(/#{1,6}\s/g, "").replace(/\n/g, " ").trim();
+          parsed = { text: cleanedText, bullets: [] };
         }
 
         return NextResponse.json({ 
@@ -138,6 +142,15 @@ export async function POST(req: NextRequest) {
           msg.includes("not found")
         ) {
           continue;
+        }
+        if (msg.includes("RECITATION") || msg.includes("recitation")) {
+          return NextResponse.json({
+            text: language === 'hi' 
+              ? "मैं आपके प्रश्न का उत्तर वैकल्पिक रूप से दे सकता हूँ। कृपया पुनः प्रयास करें।" 
+              : "I can answer your question in a different way. Please try again.",
+            bullets: [],
+            source: language === 'hi' ? "भारत निर्वाचन आयोग" : "Election Commission of India"
+          });
         }
         throw err;
       }

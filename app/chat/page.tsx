@@ -403,11 +403,23 @@ function ChatContent() {
   
   const endRef = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
+  const lastApiCall = useRef(0);
+
+  const sanitizeInput = (input: string): string => {
+    return input.replace(/<[^>]*>/g, '').slice(0, 800).trim();
+  };
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || typing) return;
     
-    const uMsg: Msg = { id: uid(), role: 'user', text };
+    const sanitized = sanitizeInput(text);
+    if (!sanitized || sanitized.length === 0) return;
+    
+    const now = Date.now();
+    if (now - lastApiCall.current < 800) return;
+    lastApiCall.current = now;
+    
+    const uMsg: Msg = { id: uid(), role: 'user', text: sanitized };
     setMsgs(prev => [...prev, uMsg]);
     setTyping(true);
     
