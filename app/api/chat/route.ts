@@ -11,7 +11,7 @@ Official Knowledge Base:
 ${CIVIC_KNOWLEDGE}
 
 CRITICAL FORMATTING RULES:
-1. NEVER copy exact content. ALWAYS paraphrase in your own words.
+1. Always paraphrase. Never reproduce official text verbatim.
 2. You MUST respond with a JSON object containing EXACTLY two keys: "text" and "bullets".
 3. "text": A concise explanation (1-2 lines). PLAIN TEXT ONLY. No markdown (**bold**, *italics*, etc.).
 4. "bullets": An array of strings for lists, steps, or requirements. Each string is a single item. NO MARKDOWN. NO BULLET SYMBOLS (- or *) in the strings.
@@ -35,7 +35,10 @@ Example JSON output for a direct follow-up:
 }
 
 Tone: Professional, authoritative, yet helpful.
-REMEMBER: Always paraphrase. Never copy exact content from any source.
+Answer like a civic expert. Provide clear, direct, useful answers. Avoid generic statements. Use short explanations and bullet points.
+Do NOT say things like 'data not available' unless absolutely necessary.
+Always provide the most useful possible answer.
+Always paraphrase. Never reproduce official text verbatim.
 `;
 
 // Models to try in order of preference — if one hits quota, the next is tried
@@ -76,7 +79,9 @@ export async function POST(req: NextRequest) {
 
     const sanitizedInput = lastMessage.replace(/<[^>]*>/g, '').trim();
 
-    const langInstruction = language === 'hi' ? "हिंदी में उत्तर दें। सरल और स्पष्ट भाषा का उपयोग करें।" : "Respond in English. Use simple, clear language.";
+    const langInstruction = language === 'hi'
+      ? "हिंदी में उत्तर दें। सरल भाषा का उपयोग करें।"
+      : "Respond in English. Use simple, clear language.";
     const finalSystemPrompt = SYSTEM_PROMPT + `\n\nLANGUAGE INSTRUCTION: ${langInstruction}`;
 
     const intercepted = interceptIntent(sanitizedInput, language);
@@ -127,7 +132,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ 
-          text: parsed.text || (language === 'hi' ? "सूचना प्राप्त की गई।" : "Information retrieved."), 
+          text: parsed.text || (language === 'hi' ? "सूचना प्राप्त की गई。" : "Information retrieved."), 
           bullets: Array.isArray(parsed.bullets) && parsed.bullets.length > 0 ? parsed.bullets : undefined,
           source: language === 'hi' ? "भारत निर्वाचन आयोग" : "Election Commission of India"
         });
@@ -143,12 +148,14 @@ export async function POST(req: NextRequest) {
         ) {
           continue;
         }
-        if (msg.includes("RECITATION") || msg.includes("recitation")) {
+        if (msg.includes("recitation")) {
           return NextResponse.json({
             text: language === 'hi' 
-              ? "मैं आपके प्रश्न का उत्तर वैकल्पिक रूप से दे सकता हूँ। कृपया पुनः प्रयास करें।" 
-              : "I can answer your question in a different way. Please try again.",
-            bullets: [],
+              ? "यहाँ एक सरलीकृत स्पष्टीकरण दिया गया है:" 
+              : "Here’s a simplified explanation:",
+            bullets: language === 'hi'
+              ? ["आधिकारिक पाठ की नकल करने से बचने के लिए जानकारी को संक्षिप्त किया गया है", "अधिक स्पष्ट विवरण के लिए एक विशिष्ट प्रश्न पूछें"]
+              : ["Information is summarized to avoid copying official text", "Ask a specific question for clearer details"],
             source: language === 'hi' ? "भारत निर्वाचन आयोग" : "Election Commission of India"
           });
         }
@@ -159,7 +166,7 @@ export async function POST(req: NextRequest) {
     throw lastError;
   } catch (error: unknown) {
     console.error("API Route Error:", error);
-    return NextResponse.json({ message: "Service busy, try again" }, { status: 500 });
+    return NextResponse.json({ message: "Service is temporarily unavailable. Please try again." }, { status: 500 });
   }
 }
 

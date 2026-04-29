@@ -202,14 +202,23 @@ const MessageList = memo(({ msgs, typing, t, endRef }: { msgs: Msg[], typing: bo
 ));
 MessageList.displayName = 'MessageList';
 
-const VoiceInput = memo(({ onTranscript, isManual, lang, lastUsedLang, t }: { 
+const VoiceInput = memo(({ onTranscript, isManual, lang, lastUsedLang, t, typing }: { 
   onTranscript: (t: string, isFinal: boolean) => void, 
   isManual: boolean, 
   lang: string, 
   lastUsedLang: string,
-  t: any 
+  t: any,
+  typing: boolean
 }) => {
-  const [status, setStatus] = useState<'idle' | 'recording' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
+
+  useEffect(() => {
+    if (typing && status !== 'recording') {
+      setStatus('processing');
+    } else if (!typing && status === 'processing') {
+      setStatus('idle');
+    }
+  }, [typing, status]);
 
   // Handle ESC to stop recording
   useEffect(() => {
@@ -255,52 +264,55 @@ const VoiceInput = memo(({ onTranscript, isManual, lang, lastUsedLang, t }: {
           }
         }
 
-        if (finalTranscript) {
-          onTranscript(finalTranscript, true);
-          // Auto-stop on final result to mimic single-turn interaction as requested
-          recognition.stop();
-        } else if (interimTranscript) {
-          onTranscript(interimTranscript, false);
-        }
+        onTranscript(finalTranscript + interimTranscript, !!finalTranscript);
+      };
+
+      recognition.onend = () => {
+        setStatus('idle');
+        onTranscript('', true); // Trigger final send with delay in parent
+        (window as any)._recognition = null;
       };
 
       recognition.onerror = (event: any) => {
-        setStatus('error');
+        setStatus('idle');
         if (event.error !== 'no-speech') {
           console.error('Speech Recognition Error:', event.error);
         }
-        setTimeout(() => setStatus('idle'), 2000);
       };
       
       recognition.start();
     } else {
       alert(t("chat.voice_not_supported"));
     }
-  }, [status, isManual, lang, lastUsedLang, onTranscript]);
+  }, [status, isManual, lang, lastUsedLang, onTranscript, t]);
 
   return (
-    <button
-      onClick={toggleRecording}
-      aria-label={status === 'recording' ? "Stop recording" : "Start voice input"}
-      aria-pressed={status === 'recording'}
-      style={{
-        width: '42px', height: '42px', borderRadius: '50%',
-        background: status === 'recording' ? 'rgba(255, 153, 51, 0.1)' : 
-                   status === 'error' ? 'rgba(239, 68, 68, 0.1)' : '#F0F0EE', 
-        border: 'none',
-        color: status === 'recording' ? 'var(--saffron)' : 
-               status === 'error' ? '#EF4444' : 'var(--muted)', 
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease',
-        animation: status === 'recording' ? 'micPulse 1.4s infinite ease-out, micBreathe 1.4s infinite ease-in-out' : 'none',
-        position: 'relative'
-      }}
-      title={status === 'recording' ? "Stop Recording" : "Start Voice Input"}
-    >
-      <span style={{ fontSize: '1.1rem' }} aria-hidden="true">
-        {status === 'error' ? '⚠️' : '🎙️'}
-      </span>
-    </button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      {status === 'recording' && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--saffron)', fontWeight: 600 }}>{lang === 'hi' ? 'सुन रहा हूँ...' : 'Listening...'}</span>}
+      {status === 'processing' && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--green)', fontWeight: 600 }}>{lang === 'hi' ? 'प्रक्रिया जारी है...' : 'Processing...'}</span>}
+      <button
+        onClick={toggleRecording}
+        aria-label={status === 'recording' ? "Stop recording" : "Start voice input"}
+        aria-pressed={status === 'recording'}
+        style={{
+          width: '42px', height: '42px', borderRadius: '50%',
+          background: status === 'recording' ? 'rgba(255, 153, 51, 0.1)' : 
+                     status === 'processing' ? 'rgba(34, 197, 94, 0.1)' : '#F0F0EE', 
+          border: 'none',
+          color: status === 'recording' ? 'var(--saffron)' : 
+                 status === 'processing' ? 'var(--green)' : 'var(--muted)', 
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s ease',
+          animation: status === 'recording' ? 'micPulse 1.4s infinite ease-out, micBreathe 1.4s infinite ease-in-out' : 'none',
+          position: 'relative'
+        }}
+        title={status === 'recording' ? "Stop Recording" : "Start Voice Input"}
+      >
+        <span style={{ fontSize: '1.1rem' }} aria-hidden="true">
+          🎙️
+        </span>
+      </button>
+    </div>
   );
 });
 VoiceInput.displayName = 'VoiceInput';
@@ -323,13 +335,12 @@ const InputBar = memo(({ onSend, typing, t, isManual, lang, lastUsedLang }: {
   }, [input, onSend]);
 
   const handleTranscript = useCallback((text: string, isFinal: boolean) => {
-    setInput(text);
+    if (text) setInput(text);
     if (isFinal) {
-      // Auto-send with a small delay to feel smooth
       setTimeout(() => {
-        onSend(text);
+        if (text.trim()) onSend(text);
         setInput('');
-      }, 400);
+      }, 350);
     }
   }, [onSend]);
 
@@ -358,6 +369,7 @@ const InputBar = memo(({ onSend, typing, t, isManual, lang, lastUsedLang }: {
         lang={lang} 
         lastUsedLang={lastUsedLang} 
         t={t} 
+        typing={typing}
       />
       <button 
         onClick={handleSend} 
@@ -410,10 +422,8 @@ function ChatContent() {
   };
 
   const send = useCallback(async (text: string) => {
-    if (!text.trim() || typing) return;
-    
-    const sanitized = sanitizeInput(text);
-    if (!sanitized || sanitized.length === 0) return;
+    const sanitized = text.replace(/<[^>]*>/g, '').trim();
+    if (!sanitized || sanitized.length > 800) return;
     
     const now = Date.now();
     if (now - lastApiCall.current < 800) return;
@@ -430,27 +440,46 @@ function ChatContent() {
     }
     setLastUsedLang(targetLang);
 
+    const normalize = (text: string) => {
+      return text
+        .replace(/\*\*/g, "") // remove markdown
+        .split(/\n|\./)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(s => s.startsWith("-") ? s : `- ${s}`)
+        .join("\n");
+    };
+
     const callApi = async (currentMsgs: Msg[]) => {
       const ans = await getGeminiResponse(currentMsgs, targetLang);
+      
+      // Section 5: ALWAYS run normalization function
+      const cleanText = normalize(ans.text);
+
       setMsgs(prev => [...prev, {
         id: uid(),
         role: 'assistant',
         refCode: genRef(),
         ...ans,
+        text: cleanText
       }]);
     };
 
     try {
-      await callApi([...msgs, uMsg]);
+      const lastUserMsg = msgs.filter(m => m.role === 'user').slice(-1)[0]?.text || "";
+      const contextInput = lastUserMsg ? `${lastUserMsg}\n${sanitized}` : sanitized;
+      await callApi([...msgs, { ...uMsg, text: contextInput }]);
     } catch {
       try {
-        await callApi([...msgs, uMsg]);
+        const lastUserMsg = msgs.filter(m => m.role === 'user').slice(-1)[0]?.text || "";
+        const contextInput = lastUserMsg ? `${lastUserMsg}\n${sanitized}` : sanitized;
+        await callApi([...msgs, { ...uMsg, text: contextInput }]);
       } catch {
         setMsgs(prev => [...prev, {
           id: uid(),
           role: 'assistant',
           refCode: genRef(),
-          text: t("chat.error_generic"),
+          text: "Service is temporarily unavailable. Please try again.",
           source: t("chat.system_error"),
         }]);
       }
