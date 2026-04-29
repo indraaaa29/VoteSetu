@@ -58,7 +58,10 @@
     "voice_error": "Voice not recognized, please try again",
     "error_generic": "An unexpected error occurred. Please try again.",
     "system_error": "System Error",
-    "source_default": "Election Commission of India"
+    "source_default": "Election Commission of India",
+    "aria_input": "Message input field",
+    "aria_send": "Send message",
+    "aria_voice": "Start voice input"
   },
   "docs": {
     "meta": {

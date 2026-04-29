@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { CIVIC_KNOWLEDGE } from "@/lib/docs";
 import { interceptIntent } from "@/lib/intent-interceptor";
+import { sanitizeInput } from "@/lib/utils";
 
 const SYSTEM_PROMPT = `
 You are the VoteSetu Civic Assistant, an official service of the Election Commission of India.
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Question is too long. Please keep it under 800 characters." }, { status: 400 });
     }
 
-    const sanitizedInput = lastMessage.replace(/<[^>]*>/g, '').trim();
+    const sanitizedInput = sanitizeInput(lastMessage);
 
     const langInstruction = language === 'hi'
       ? "हिंदी में उत्तर दें। सरल भाषा का उपयोग करें।"
